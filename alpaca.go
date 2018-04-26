@@ -42,7 +42,7 @@ type Field struct {
 	Title                string
 	Name                 string
 	NameCalculated       string
-	Type                 string
+	Type                 []byte
 	Path                 string
 	Validation           string
 	Events               string
@@ -65,6 +65,7 @@ var (
 	ErrDefaultError = errors.New("You must supply at least one argument.")
 )
 
+// Quote surrounds a string in quotes so jsonparser can detect that it is a string
 func Quote(a string) string {
 	return "\"" + a + "\""
 }
@@ -97,6 +98,7 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 		alpaca.data = []byte("{}")
 	}
 
+	// Kick off the field registration
 	alpaca.CreateFieldInstance("", alpaca.data, alpaca.options, alpaca.schema, nil)
 
 	return alpaca, nil
@@ -158,72 +160,37 @@ func (a *Alpaca) CreateFieldInstance(key string, data []byte, options []byte, sc
 
 func (a *Alpaca) ResolvePropertySchemaOptions(key string, connector *Field) {
 
-	// propertyValue := make([]byte, 0)
+	aSchema := make([]byte, 0)
 	propertiesValue, propertiesType, _, _ := jsonparser.Get(connector.Schema, "properties")
 	if propertiesType != jsonparser.NotExist {
 		propertyValue, propertyType, _, _ := jsonparser.Get(propertiesValue, key)
-		fmt.Println(string(propertyValue))
-		fmt.Println(propertyType)
-
-	}
-
-	options := connector.Options
-	optionsValue, optionsType, _, _ := jsonparser.Get(options, "fields")
-	if optionsType != jsonparser.NotExist {
-		propertyOptions, propertyOptionsType, _, _ := jsonparser.Get(optionsValue, string(key))
-		if propertyOptionsType != jsonparser.NotExist {
-			options = propertyOptions
+		if propertyType != jsonparser.NotExist {
+			aSchema = propertyValue
 		}
 	}
 
-	fmt.Println(string(options))
-
-	// If field is found use that otherwise dive deeper
-	propertyData := connector.Data
-	propertyDataValue, propertyDataType, _, _ := jsonparser.Get(propertyData, string(key))
-	if propertyDataType != jsonparser.NotExist {
-		propertyData = propertyDataValue
+	aOptions := make([]byte, 0)
+	aOptions = connector.Options
+	optionsValue, optionsType, _, _ := jsonparser.Get(aOptions, "fields")
+	if optionsType != jsonparser.NotExist {
+		propertyOptions, propertyOptionsType, _, _ := jsonparser.Get(optionsValue, string(key))
+		if propertyOptionsType != jsonparser.NotExist {
+			aOptions = propertyOptions
+		}
 	}
 
-	fmt.Println(string(propertyData))
-	// PropertyOptions := gabs.New()
-	// PropertyOptions = ContainerField.Options
-	// if ContainerField.Options.Exists("fields") == true && ContainerField.Options.Search("fields").Exists(PropertyId) == true {
-	// 	PropertyOptions = ContainerField.Options.Search("fields").Search(PropertyId)
-	// }
+	// If field is found use that otherwise dive deeper
+	aData := make([]byte, 0)
+	aData = connector.Data
+	propertyDataValue, propertyDataType, _, _ := jsonparser.Get(aData, string(key))
+	if propertyDataType != jsonparser.NotExist {
+		aData = propertyDataValue
+	}
 
-	// if connector.Schema  .Schema.Exists("properties") == true && ContainerField.Schema.Search("properties").Exists(PropertyId) == true {
-	// 	PropertySchema = ContainerField.Schema.Search("properties").Search(PropertyId)
-	// }
-
-	// Push through ResolvePropertySchemaOptions instead
-	// fieldSchema := value
-
-	// fieldOptions := options
-	// optionsValue, optionsType, _, _ := jsonparser.Get(options, string(key))
-	// if optionsType != jsonparser.NotExist {
-	// 	fieldOptions = optionsValue
-	// }
-
-	// fieldData := data
-	// need to dig into fields
-
-	// dataValue, dataType, _, _ := jsonparser.Get(data, string(key))
-	// if optionsType != jsonparser.NotExist {
-	// 	fieldData = dataValue
-	// }
-
-	// fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
-	// if index == 0 {
-	// a.CreateFieldInstance(string(key), fieldData, fieldOptions, fieldSchema, connector)
-	// fmt.Println(string(key))
-	// fmt.Println(string(fieldSchema))
-	// fmt.Println(string(fieldOptions))
-	// fmt.Println(string(fieldData))
-	// fmt.Println(offset)
-	// }
+	a.CreateFieldInstance(key, aData, aOptions, aSchema, connector)
 }
 
+// Object container field
 func (a *Alpaca) Object(schema []byte, options []byte, data []byte, connector *Field) {
 
 	field := &Field{
@@ -242,16 +209,23 @@ func (a *Alpaca) Object(schema []byte, options []byte, data []byte, connector *F
 	}
 }
 
+// Information container field
 func (a *Alpaca) Information() *Field {
+	field := &Field{}
 	fmt.Println("information")
-	return &Field{}
+	a.FieldRegistry = append(a.FieldRegistry)
+	return field
 }
 
+// Any default fallback field
 func (a *Alpaca) Any() *Field {
-	return &Field{}
+	field := &Field{}
+	fmt.Println("any")
+	a.FieldRegistry = append(a.FieldRegistry)
+	return field
 }
 
-// Makes a best guess at the options field type if none provided.
+// GuessOptionsType determines field type
 func (a *Alpaca) GuessOptionsType(schema []byte) string {
 	optionsType := ""
 
