@@ -1,74 +1,12 @@
 package alpaca
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
+	"strconv"
 
-	"github.com/buger/jsonparser"
+	"github.com/spf13/cast"
+
+	"github.com/Jeffail/gabs"
 )
-
-type AlpacaOptions struct {
-	Schema  string
-	Data    string
-	Request *http.Request
-}
-
-var DefaultSchemaFieldMapping = map[string]string{
-	"object": "object",
-}
-
-var DefaultFormatFieldMapping = map[string]string{}
-
-type Alpaca struct {
-	data          []byte
-	schema        []byte
-	options       []byte
-	connector     string
-	request       *http.Request
-	FieldRegistry []*Field
-}
-
-type Field struct {
-	Initializing         bool
-	Parent               Alpaca
-	Data                 []byte
-	Options              []byte
-	Schema               []byte
-	Connector            *Field
-	SingleLevelRendering string
-	ID                   string
-	Key                  string
-	Title                string
-	Name                 string
-	NameCalculated       string
-	Type                 []byte
-	Path                 string
-	Validation           string
-	Events               string
-	ShowingDefaultData   string
-	PreviouslyValidated  bool
-	IsContainerField     bool
-	PropertyId           string
-	Value                interface{}
-	ChildrenByPropertyId map[string]Alpaca
-	childrenById         map[string]Alpaca
-	Children             []Alpaca
-	Debug                bool
-	Order                int
-	ReadOnly             bool
-	notTopLevel          bool
-	// Media                []ImageFile
-}
-
-var (
-	ErrDefaultError = errors.New("You must supply at least one argument.")
-)
-
-// Quote surrounds a string in quotes so jsonparser can detect that it is a string
-func Quote(a string) string {
-	return "\"" + a + "\""
-}
 
 // New initalizes and returns new alpaca parser
 func New(options AlpacaOptions) (*Alpaca, error) {
@@ -79,23 +17,25 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 
 	alpaca := &Alpaca{}
 
-	schemaValue, schemaType, _, _ := jsonparser.Get([]byte(options.Schema), "schema")
-	if schemaType != jsonparser.NotExist {
-		alpaca.schema = schemaValue
+	schema, err := gabs.ParseJSON([]byte(options.Schema))
+	if err != nil {
+		return nil, ErrSchemaInvalid
 	}
 
-	optionsValue, optionsType, _, _ := jsonparser.Get([]byte(options.Schema), "options")
-	if optionsType != jsonparser.NotExist {
-		alpaca.options = optionsValue
-	} else {
-		alpaca.options = []byte("{}")
+	data, err := gabs.ParseJSON([]byte(options.Data))
+	if err != nil {
+		return nil, ErrDataInvalid
 	}
 
-	dataValue, dataType, _, _ := jsonparser.Get([]byte(options.Data))
-	if dataType != jsonparser.NotExist {
-		alpaca.data = dataValue
-	} else {
-		alpaca.data = []byte("{}")
+	alpaca.schema = schema.Search("schema")
+	alpaca.options = schema.Search("options")
+	if alpaca.options == nil {
+		alpaca.options = gabs.New()
+	}
+	alpaca.data = data
+
+	if options.Request != nil {
+		alpaca.request = options.Request
 	}
 
 	// Kick off the field registration
@@ -105,159 +45,312 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 }
 
 // Parse takes field registry and parses it into json
-func (a *Alpaca) Parse() {
-
+func (a *Alpaca) Parse() string {
+	return "Nothing for you!"
 }
 
-// CreateFieldInstance returns a new instance of the desired field based on the schema
-func (a *Alpaca) CreateFieldInstance(key string, data []byte, options []byte, schema []byte, connector *Field) {
-	fieldType := ""
+// Validate takes field registry and validates it against passed data
+func (a *Alpaca) Validate() {
 
-	_, optionsType, _, _ := jsonparser.Get(options, "type")
-	if optionsType == jsonparser.NotExist {
-
-		// if nothing passed in, we can try to make a guess based on the type of data
-		_, schemaType, _, _ := jsonparser.Get(schema, "type")
-		if schemaType == jsonparser.NotExist {
-			_, dataType, _, _ := jsonparser.Get(data)
-			if dataType != jsonparser.NotExist {
-				jsonparser.Set(schema, []byte(string(dataType)), "type")
-			}
-		}
-
-		// if nothing passed in, fallback to defaults
-		if schemaType == jsonparser.NotExist {
-			fieldType = "object"
-		}
-
-		// using what we now about schema, try to guess the type
-		guessedOptionType := a.GuessOptionsType(schema)
-		if guessedOptionType != "" {
-			options, _ = jsonparser.Set(options, []byte(Quote(guessedOptionType)), "type")
-		}
-	}
-
-	optionsValue, optionsValueType, _, _ := jsonparser.Get(options, "type")
-
-	if optionsValueType != jsonparser.NotExist {
-		fieldType = string(optionsValue)
-	}
-	// TODO Add non container fields to field registry
-
-	switch fieldType {
-	case "object":
-
-		a.Object(schema, options, data, connector)
-		break
-	case "information":
-
-		break
-	default:
-		a.Any()
-		break
-	}
 }
 
 func (a *Alpaca) ResolvePropertySchemaOptions(key string, connector *Field) {
 
-	aSchema := make([]byte, 0)
-	propertiesValue, propertiesType, _, _ := jsonparser.Get(connector.Schema, "properties")
-	if propertiesType != jsonparser.NotExist {
-		propertyValue, propertyType, _, _ := jsonparser.Get(propertiesValue, key)
-		if propertyType != jsonparser.NotExist {
-			aSchema = propertyValue
-		}
+	schema := gabs.New()
+	if connector.Schema.Exists("properties") && connector.Schema.S("properties").Exists(key) {
+		schema = connector.Schema.S("properties").S(key)
 	}
 
-	aOptions := make([]byte, 0)
-	aOptions = connector.Options
-	optionsValue, optionsType, _, _ := jsonparser.Get(aOptions, "fields")
-	if optionsType != jsonparser.NotExist {
-		propertyOptions, propertyOptionsType, _, _ := jsonparser.Get(optionsValue, string(key))
-		if propertyOptionsType != jsonparser.NotExist {
-			aOptions = propertyOptions
-		}
+	options := gabs.New()
+	options = connector.Options
+	if connector.Options.Exists("fields") && connector.Options.S("fields").Exists(key) {
+		options = connector.Options.S("fields").S(key)
 	}
 
-	// If field is found use that otherwise dive deeper
-	aData := make([]byte, 0)
-	aData = connector.Data
-	propertyDataValue, propertyDataType, _, _ := jsonparser.Get(aData, string(key))
-	if propertyDataType != jsonparser.NotExist {
-		aData = propertyDataValue
+	data := gabs.New()
+	if connector.Data.Exists(key) {
+		data = connector.Data.S(key)
 	}
 
-	a.CreateFieldInstance(key, aData, aOptions, aSchema, connector)
-}
-
-// Object container field
-func (a *Alpaca) Object(schema []byte, options []byte, data []byte, connector *Field) {
-
-	field := &Field{
-		Schema:  schema,
-		Options: options,
-		Data:    data,
-	}
-	a.FieldRegistry = append(a.FieldRegistry, field)
-
-	propertiesValue, propertiesType, _, _ := jsonparser.Get(schema, "properties")
-	if propertiesType != jsonparser.NotExist {
-		jsonparser.ObjectEach(propertiesValue, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-			a.ResolvePropertySchemaOptions(string(key), field)
-			return nil
-		})
-	}
-}
-
-// Information container field
-func (a *Alpaca) Information() *Field {
-	field := &Field{}
-	fmt.Println("information")
-	a.FieldRegistry = append(a.FieldRegistry)
-	return field
-}
-
-// Any default fallback field
-func (a *Alpaca) Any() *Field {
-	field := &Field{}
-	fmt.Println("any")
-	a.FieldRegistry = append(a.FieldRegistry)
-	return field
+	a.CreateFieldInstance(key, data, options, schema, connector)
 }
 
 // GuessOptionsType determines field type
-func (a *Alpaca) GuessOptionsType(schema []byte) string {
-	optionsType := ""
+func (a *Alpaca) GuessOptionsType(schema *gabs.Container) string {
+	optionType := ""
 
-	enumValue, enumType, _, _ := jsonparser.Get(schema, "enum")
+	if schema.Exists("enum") == true {
 
-	if enumType != jsonparser.NotExist {
-		if enumType == jsonparser.Array {
-			if len(enumValue) > 3 {
-				optionsType = "select"
+		children, err := schema.S("enum").Children()
+		if err == nil {
+			if len(children) > 3 {
+				optionType = "select"
 			} else {
-				optionsType = "radio"
+				optionType = "radio"
 			}
 		}
-	} else {
-		schemaTypeValue, schemaType, _, _ := jsonparser.Get(schema, "type")
 
-		if schemaType != jsonparser.NotExist {
-			mapValue, isset := DefaultSchemaFieldMapping[string(schemaTypeValue)]
-			if isset {
-				optionsType = mapValue
-			}
+	} else {
+		fieldType := schema.Search("type").Data().(string)
+		if fieldType != "" {
+			optionType = DefaultSchemaFieldMapping[fieldType]
 		}
 	}
 
 	// check if it has format defined
-	schemaFormatValue, schemaFormatType, _, _ := jsonparser.Get(schema, "format")
-	if schemaFormatType != jsonparser.NotExist {
-		mapValue, isset := DefaultFormatFieldMapping[string(schemaFormatValue)]
-		if isset {
-			optionsType = mapValue
+	if schema.Exists("format") == true {
+		optionType = DefaultFormatFieldMapping[schema.S("format").Data().(string)]
+	}
+
+	return optionType
+}
+
+// GetSchemaType returns schema type of data.
+func (a *Alpaca) GetSchemaType(data *gabs.Container) string {
+	// seems to be returning an array even for strings, thus invalid
+	if _, err := data.Children(); err == nil {
+		return "array"
+	}
+
+	if _, err := data.ChildrenMap(); err == nil {
+		return "object"
+	}
+
+	if _, err := strconv.Atoi(data.String()); err == nil {
+		return "number"
+	}
+
+	if _, err := strconv.ParseBool(data.String()); err == nil {
+		return "boolean"
+	}
+
+	return "string"
+}
+
+// GetAttributes extracts generic attributes from fields
+func (f *Field) GetAttributes() {
+	if f.Schema.Exists("title") {
+		f.Title = cast.ToString(f.Schema.S("title").Data())
+	}
+
+	// So parent can see children as well as the children seeing parent
+	if f.Parent != nil {
+		f.Parent.Children = append(f.Parent.Children, f)
+	}
+
+	if f.Options.Exists("order") {
+		f.Order = cast.ToInt(f.Options.S("order").Data())
+	}
+
+	if f.Data.Data() != nil {
+		f.Value = f.Data.Data()
+	}
+
+	if f.Schema.Exists("readonly") {
+		f.ReadOnly = cast.ToBool(f.Schema.S("readonly").Data())
+	}
+
+	if f.Schema.Exists("default") {
+		f.Default = f.Schema.S("default").Data()
+	}
+
+	if f.ReadOnly {
+		f.Value = f.Default
+	}
+
+}
+
+// CreateFieldInstance returns a new instance of the desired field based on the schema
+func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field) {
+
+	if !options.Exists("type") {
+
+		// if nothing passed in, we can try to make a guess based on the type of data
+		if !schema.Exists("type") {
+			schemaType := a.GetSchemaType(data)
+			if schemaType != "" {
+				schema.Set(schemaType, "type")
+			}
+		}
+
+		// if nothing passed in, fallback to defaults
+		if !schema.Exists("type") {
+			schema.Set("object", "type")
+		}
+
+		// using what we now about schema, try to guess the type
+		optionType := a.GuessOptionsType(schema)
+		if optionType != "" {
+			options.Set(optionType, "type")
 		}
 	}
 
-	return optionsType
+	fieldType := options.Search("type").Data().(string)
+
+	f := &Field{
+		Schema:  schema,
+		Options: options,
+		Data:    data,
+		Key:     key,
+		Type:    fieldType,
+		Parent:  connector,
+	}
+	f.GetAttributes()
+
+	switch fieldType {
+	case "address":
+		a.Address(f)
+		break
+	case "ckeditor":
+		a.CKEditor(f)
+		break
+	case "color":
+		a.Color(f)
+		break
+	case "colorpicker":
+		a.ColorPicker(f)
+		break
+	case "country":
+		a.Country(f)
+		break
+	case "currency":
+		a.Currency(f)
+		break
+	case "date":
+		a.Date(f)
+		break
+	case "datetime":
+		a.DateTime(f)
+		break
+	case "editor":
+		a.Editor(f)
+		break
+	case "email":
+		a.Email(f)
+		break
+	case "grid":
+		a.Grid(f)
+		break
+	case "image":
+		a.Image(f)
+		break
+	case "integer":
+		a.Integer(f)
+		break
+	case "ipv4":
+		a.IPv4(f)
+		break
+	case "json":
+		a.JSON(f)
+		break
+	case "lowercase":
+		a.Lowercase(f)
+		break
+	case "map":
+		a.Map(f)
+		break
+	case "optiontree":
+		a.OptionTree(f)
+		break
+	case "password":
+		a.Password(f)
+		break
+	case "personalname":
+		a.PersonalName(f)
+		break
+	case "phone":
+		a.Phone(f)
+		break
+	case "pickacolor":
+		a.PickAColor(f)
+		break
+	case "search":
+		a.Search(f)
+		break
+	case "state":
+		a.State(f)
+		break
+	case "summernote":
+		a.Summernote(f)
+		break
+	case "table":
+		a.Table(f)
+		break
+	case "tablerow":
+		a.TableRow(f)
+		break
+	case "tag":
+		a.Tag(f)
+		break
+	case "time":
+		a.Time(f)
+		break
+	case "tinymce":
+		a.TinyMCE(f)
+		break
+	case "token":
+		a.Token(f)
+		break
+	case "upload":
+		a.Upload(f)
+		break
+	case "uppercase":
+		a.Uppercase(f)
+		break
+	case "url":
+		a.URL(f)
+		break
+	case "zipcode":
+		a.Zipcode(f)
+		break
+	case "array":
+		a.Array(f)
+		break
+	case "file":
+		a.File(f)
+		break
+	case "hidden":
+		a.Hidden(f)
+		break
+	case "number":
+		a.Number(f)
+		break
+	case "object":
+		a.Object(f)
+		break
+	case "text":
+		a.Text(f)
+		break
+	case "textarea":
+		a.TextArea(f)
+		break
+	case "camera":
+		a.Camera(f)
+		break
+	case "information":
+		a.Information(f)
+		break
+	case "repeatable":
+		a.Repeatable(f)
+		break
+	case "signature":
+		a.Signature(f)
+		break
+	case "checkbox":
+		a.Checkbox(f)
+		break
+	case "chooser":
+		a.Chooser(f)
+		break
+	case "radio":
+		a.Radio(f)
+		break
+	case "select":
+		a.Select(f)
+		break
+	case "any":
+		a.Any(f)
+	default:
+		a.Any(f)
+	}
 }
