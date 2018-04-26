@@ -39,19 +39,37 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 	}
 
 	// Kick off the field registration
-	alpaca.CreateFieldInstance("", alpaca.data, alpaca.options, alpaca.schema, nil)
+	alpaca.CreateFieldInstance("", alpaca.data, alpaca.options, alpaca.schema, nil, 0, false)
 
 	return alpaca, nil
 }
 
-// Parse takes field registry and parses it into json
+// Parse takes field registry and parses it into json string
 func (a *Alpaca) Parse() string {
-	return "Nothing for you!"
+	result := gabs.New()
+	for _, field := range a.FieldRegistry {
+		if cast.ToString(field.Value) != "" {
+			result.Set(field.Value, field.Key)
+		}
+	}
+	return result.String()
 }
 
-// Validate takes field registry and validates it against passed data
+// Validate takes field registry and validates it against passed data - TODO
 func (a *Alpaca) Validate() {
 
+}
+
+func (a *Alpaca) ResolveItemSchemaOptions(key string, connector *Field, index int) {
+	schema := gabs.New()
+	if connector.Schema.Exists("items") {
+		schema = connector.Schema.S("items")
+	}
+
+	options := connector.Options
+	data := connector.Data
+
+	a.CreateFieldInstance(key, data, options, schema, connector, index, true)
 }
 
 func (a *Alpaca) ResolvePropertySchemaOptions(key string, connector *Field) {
@@ -72,7 +90,7 @@ func (a *Alpaca) ResolvePropertySchemaOptions(key string, connector *Field) {
 		data = connector.Data.S(key)
 	}
 
-	a.CreateFieldInstance(key, data, options, schema, connector)
+	a.CreateFieldInstance(key, data, options, schema, connector, 0, false)
 }
 
 // GuessOptionsType determines field type
@@ -142,6 +160,7 @@ func (f *Field) GetAttributes() {
 		f.Order = cast.ToInt(f.Options.S("order").Data())
 	}
 
+	// Here we can do some fancy logic if the field is an array field
 	if f.Data.Data() != nil {
 		f.Value = f.Data.Data()
 	}
@@ -161,7 +180,7 @@ func (f *Field) GetAttributes() {
 }
 
 // CreateFieldInstance returns a new instance of the desired field based on the schema
-func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field) {
+func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field, arrayIndex int, arrayChild bool) {
 
 	if !options.Exists("type") {
 
@@ -188,142 +207,145 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	fieldType := options.Search("type").Data().(string)
 
 	f := &Field{
-		Schema:  schema,
-		Options: options,
-		Data:    data,
-		Key:     key,
-		Type:    fieldType,
-		Parent:  connector,
+		Schema:       schema,
+		Options:      options,
+		Data:         data,
+		Key:          key,
+		Type:         fieldType,
+		Parent:       connector,
+		IsArrayChild: arrayChild,
+		ArrayIndex:   arrayIndex,
 	}
 	f.GetAttributes()
 
+	// Not all field types are required for definition, many share the same basic behaviour as Any
 	switch fieldType {
-	case "address":
-		a.Address(f)
-		break
-	case "ckeditor":
-		a.CKEditor(f)
-		break
-	case "color":
-		a.Color(f)
-		break
-	case "colorpicker":
-		a.ColorPicker(f)
-		break
-	case "country":
-		a.Country(f)
-		break
-	case "currency":
-		a.Currency(f)
-		break
-	case "date":
-		a.Date(f)
-		break
-	case "datetime":
-		a.DateTime(f)
-		break
-	case "editor":
-		a.Editor(f)
-		break
-	case "email":
-		a.Email(f)
-		break
-	case "grid":
-		a.Grid(f)
-		break
-	case "image":
-		a.Image(f)
-		break
-	case "integer":
-		a.Integer(f)
-		break
-	case "ipv4":
-		a.IPv4(f)
-		break
-	case "json":
-		a.JSON(f)
-		break
-	case "lowercase":
-		a.Lowercase(f)
-		break
-	case "map":
-		a.Map(f)
-		break
-	case "optiontree":
-		a.OptionTree(f)
-		break
-	case "password":
-		a.Password(f)
-		break
-	case "personalname":
-		a.PersonalName(f)
-		break
-	case "phone":
-		a.Phone(f)
-		break
-	case "pickacolor":
-		a.PickAColor(f)
-		break
-	case "search":
-		a.Search(f)
-		break
-	case "state":
-		a.State(f)
-		break
-	case "summernote":
-		a.Summernote(f)
-		break
-	case "table":
-		a.Table(f)
-		break
-	case "tablerow":
-		a.TableRow(f)
-		break
-	case "tag":
-		a.Tag(f)
-		break
-	case "time":
-		a.Time(f)
-		break
-	case "tinymce":
-		a.TinyMCE(f)
-		break
-	case "token":
-		a.Token(f)
-		break
-	case "upload":
-		a.Upload(f)
-		break
-	case "uppercase":
-		a.Uppercase(f)
-		break
-	case "url":
-		a.URL(f)
-		break
-	case "zipcode":
-		a.Zipcode(f)
-		break
-	case "array":
-		a.Array(f)
-		break
-	case "file":
-		a.File(f)
-		break
-	case "hidden":
-		a.Hidden(f)
-		break
-	case "number":
-		a.Number(f)
-		break
+	// case "address":
+	// 	a.Address(f)
+	// 	break
+	// case "ckeditor":
+	// 	a.CKEditor(f)
+	// 	break
+	// case "color":
+	// 	a.Color(f)
+	// 	break
+	// case "colorpicker":
+	// 	a.ColorPicker(f)
+	// 	break
+	// case "country":
+	// 	a.Country(f)
+	// 	break
+	// case "currency":
+	// 	a.Currency(f)
+	// 	break
+	// case "date":
+	// 	a.Date(f)
+	// 	break
+	// case "datetime":
+	// 	a.DateTime(f)
+	// 	break
+	// case "editor":
+	// 	a.Editor(f)
+	// 	break
+	// case "email":
+	// 	a.Email(f)
+	// 	break
+	// case "grid":
+	// 	a.Grid(f)
+	// 	break
+	// case "image":
+	// 	a.Image(f)
+	// 	break
+	// case "integer":
+	// 	a.Integer(f)
+	// 	break
+	// case "ipv4":
+	// 	a.IPv4(f)
+	// 	break
+	// case "json":
+	// 	a.JSON(f)
+	// 	break
+	// case "lowercase":
+	// 	a.Lowercase(f)
+	// 	break
+	// case "map":
+	// 	a.Map(f)
+	// 	break
+	// case "optiontree":
+	// 	a.OptionTree(f)
+	// 	break
+	// case "password":
+	// 	a.Password(f)
+	// 	break
+	// case "personalname":
+	// 	a.PersonalName(f)
+	// 	break
+	// case "phone":
+	// 	a.Phone(f)
+	// 	break
+	// case "pickacolor":
+	// 	a.PickAColor(f)
+	// 	break
+	// case "search":
+	// 	a.Search(f)
+	// 	break
+	// case "state":
+	// 	a.State(f)
+	// 	break
+	// case "summernote":
+	// 	a.Summernote(f)
+	// 	break
+	// case "table":
+	// 	a.Table(f)
+	// 	break
+	// case "tablerow":
+	// 	a.TableRow(f)
+	// 	break
+	// case "tag":
+	// 	a.Tag(f)
+	// 	break
+	// case "time":
+	// 	a.Time(f)
+	// 	break
+	// case "tinymce":
+	// 	a.TinyMCE(f)
+	// 	break
+	// case "token":
+	// 	a.Token(f)
+	// 	break
+	// case "upload":
+	// 	a.Upload(f)
+	// 	break
+	// case "uppercase":
+	// 	a.Uppercase(f)
+	// 	break
+	// case "url":
+	// 	a.URL(f)
+	// 	break
+	// case "zipcode":
+	// 	a.Zipcode(f)
+	// 	break
+	// case "array":
+	// 	a.Array(f)
+	// 	break
+	// case "file":
+	// 	a.File(f)
+	// 	break
+	// case "hidden":
+	// 	a.Hidden(f)
+	// 	break
+	// case "number":
+	// 	a.Number(f)
+	// 	break
 	case "object":
 		a.Object(f)
 		break
 	case "text":
 		a.Text(f)
 		break
-	case "textarea":
-		a.TextArea(f)
-		break
+	// case "textarea":
+	// 	a.TextArea(f)
+	// 	break
 	case "camera":
 		a.Camera(f)
 		break
@@ -336,20 +358,20 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	case "signature":
 		a.Signature(f)
 		break
-	case "checkbox":
-		a.Checkbox(f)
-		break
-	case "chooser":
-		a.Chooser(f)
-		break
-	case "radio":
-		a.Radio(f)
-		break
-	case "select":
-		a.Select(f)
-		break
-	case "any":
-		a.Any(f)
+	// case "checkbox":
+	// 	a.Checkbox(f)
+	// 	break
+	// case "chooser":
+	// 	a.Chooser(f)
+	// 	break
+	// case "radio":
+	// 	a.Radio(f)
+	// 	break
+	// case "select":
+	// 	a.Select(f)
+	// 	break
+	// case "any":
+	// 	a.Any(f)
 	default:
 		a.Any(f)
 	}

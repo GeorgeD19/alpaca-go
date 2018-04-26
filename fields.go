@@ -1,6 +1,6 @@
 package alpaca
 
-// Address control field
+// Address control field - Unsupportedd
 func (a *Alpaca) Address(f *Field) {
 	a.FieldRegistry = append(a.FieldRegistry, f)
 }
@@ -189,13 +189,12 @@ func (a *Alpaca) Array(f *Field) {
 		maxItems = f.Schema.S("maxItems").Data().(int)
 	}
 
-	children, _ := f.Schema.S("items").ChildrenMap()
-	childIndex := 0
-	for key := range children {
-		if childIndex < maxItems {
-			a.ResolvePropertySchemaOptions(key+"["+string(childIndex)+"]", f)
+	if f.Schema.Exists("items") {
+		for x := 0; x < maxItems; x++ {
+			a.ResolveItemSchemaOptions(f.Key, f, x)
 		}
 	}
+
 	a.FieldRegistry = append(a.FieldRegistry, f)
 }
 
@@ -244,6 +243,55 @@ func (a *Alpaca) Information(f *Field) {
 
 // Camera container field
 func (a *Alpaca) Camera(f *Field) {
+
+	// If we have a request object we can attempt to grab image data
+	if a.request != nil {
+
+		maxImage := 10
+		if f.Schema.Exists("maxImage") {
+			maxImage = f.Schema.S("maxItems").Data().(int)
+		}
+
+		for x := 0; x < maxImage; x++ {
+			// FileName := f.Field.Key + "_image_" + strconv.Itoa(loop)
+
+			// file, _, err := Request.FormFile(FileName)
+			// CreatedDevice := Request.FormValue(FileName + "_created")
+
+			// if err == nil {
+			// 	defer file.Close()
+
+			// 	FoundFile := ImageFile{}
+			// 	var Buf bytes.Buffer
+			// 	io.Copy(&Buf, file)
+			// 	contents := Buf.Bytes()
+			// 	content := hex.EncodeToString(contents)
+			// 	FoundFile.Data = content
+
+			// 	file, _, _ := Request.FormFile(FileName)
+			// 	config, format, _ := image.DecodeConfig(file)
+			// 	FoundFile.Name = FileName
+			// 	FoundFile.Width = config.Width
+			// 	FoundFile.Height = config.Height
+			// 	FoundFile.Type = format
+			// 	FoundFile.Mime = mime.TypeByExtension("." + format)
+			// 	FoundFile.FieldKey = f.Field.Key
+
+			// 	layout := "2006-01-02 15:04:05"
+			// 	t, err := time.Parse(layout, CreatedDevice)
+			// 	if err != nil {
+			// 		FoundFile.Created = time.Now()
+			// 	} else {
+			// 		FoundFile.Created = t
+			// 	}
+
+			// 	MediaRegistry[FileName] = FoundFile
+			// 	f.Field.Media = append(f.Field.Media, FoundFile)
+			// 	Buf.Reset()
+			// }
+		}
+	}
+
 	a.FieldRegistry = append(a.FieldRegistry, f)
 }
 
