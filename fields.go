@@ -1,183 +1,187 @@
 package alpaca
 
+import (
+	"github.com/spf13/cast"
+)
+
 // Address control field - Unsupportedd
 func (a *Alpaca) Address(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // CKEditor control field
 func (a *Alpaca) CKEditor(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Color control field
 func (a *Alpaca) Color(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // ColorPicker control field
 func (a *Alpaca) ColorPicker(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Country control field
 func (a *Alpaca) Country(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Currency control field
 func (a *Alpaca) Currency(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Date control field
 func (a *Alpaca) Date(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // DateTime control field
 func (a *Alpaca) DateTime(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Editor control field
 func (a *Alpaca) Editor(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Email control field
 func (a *Alpaca) Email(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Grid control field
 func (a *Alpaca) Grid(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Image control field
 func (a *Alpaca) Image(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Integer control field
 func (a *Alpaca) Integer(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // IPv4 control field
 func (a *Alpaca) IPv4(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // JSON control field
 func (a *Alpaca) JSON(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Lowercase control field
 func (a *Alpaca) Lowercase(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Map control field
 func (a *Alpaca) Map(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // OptionTree control field
 func (a *Alpaca) OptionTree(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Password control field
 func (a *Alpaca) Password(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // PersonalName control field
 func (a *Alpaca) PersonalName(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Phone control field
 func (a *Alpaca) Phone(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // PickAColor control field
 func (a *Alpaca) PickAColor(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Search control field
 func (a *Alpaca) Search(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // State control field
 func (a *Alpaca) State(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Summernote control field
 func (a *Alpaca) Summernote(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Table control field
 func (a *Alpaca) Table(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // TableRow control field
 func (a *Alpaca) TableRow(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Tag control field
 func (a *Alpaca) Tag(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Time control field
 func (a *Alpaca) Time(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // TinyMCE control field
 func (a *Alpaca) TinyMCE(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Token control field
 func (a *Alpaca) Token(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Upload control field
 func (a *Alpaca) Upload(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Uppercase control field
 func (a *Alpaca) Uppercase(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // URL control field
 func (a *Alpaca) URL(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Zipcode control field
 func (a *Alpaca) Zipcode(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Any control field
 func (a *Alpaca) Any(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Array container field
@@ -186,7 +190,7 @@ func (a *Alpaca) Array(f *Field) {
 
 	maxItems := 1
 	if f.Schema.Exists("maxItems") {
-		maxItems = f.Schema.S("maxItems").Data().(int)
+		maxItems = cast.ToInt(f.Schema.S("maxItems").Data().(float64))
 	}
 
 	if f.Schema.Exists("items") {
@@ -195,22 +199,22 @@ func (a *Alpaca) Array(f *Field) {
 		}
 	}
 
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // File control field
 func (a *Alpaca) File(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Hidden control field
 func (a *Alpaca) Hidden(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Number control field
 func (a *Alpaca) Number(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Object container field
@@ -222,23 +226,33 @@ func (a *Alpaca) Object(f *Field) {
 			a.ResolvePropertySchemaOptions(key, f)
 		}
 	}
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Text control field
 func (a *Alpaca) Text(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+
+	// TODO flag up validation errors
+	// if f.Schema.Exists("minLength") {
+	// 	minLength := f.Schema.Path("minLength").Data().(float64)
+	// }
+
+	// if f.Schema.Exists("maxLength") {
+	// 	maxLength := f.Schema.Path("maxLength").Data().(float64)
+	// }
+
+	a.RegisterField(f)
 }
 
 // TextArea control field
 func (a *Alpaca) TextArea(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Information container field
 func (a *Alpaca) Information(f *Field) {
 	f.IsContainerField = true
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Camera container field
@@ -292,35 +306,35 @@ func (a *Alpaca) Camera(f *Field) {
 		}
 	}
 
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Repeatable container field
 func (a *Alpaca) Repeatable(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Signature container field
 func (a *Alpaca) Signature(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Checkbox container field
 func (a *Alpaca) Checkbox(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Chooser container field
 func (a *Alpaca) Chooser(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Radio container field
 func (a *Alpaca) Radio(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }
 
 // Select container field
 func (a *Alpaca) Select(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
+	a.RegisterField(f)
 }

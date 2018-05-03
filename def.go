@@ -122,6 +122,13 @@ type Alpaca struct {
 	UniqueIDCounter int
 }
 
+type Chunk struct {
+	Type      string
+	Value     string
+	Connector *Chunk
+	Field     *Field
+}
+
 type Field struct {
 	Data                *gabs.Container
 	Options             *gabs.Container
@@ -132,7 +139,7 @@ type Field struct {
 	Key                 string
 	Title               string
 	Type                string
-	Path                string
+	Path                []Chunk
 	Validate            string
 	ShowingDefaultData  string
 	PreviouslyValidated bool
@@ -146,6 +153,7 @@ type Field struct {
 	notTopLevel         bool
 	IsArrayChild        bool
 	ArrayIndex          int
+	ArrayValues         int
 	Media               []ImageFile
 }
 
