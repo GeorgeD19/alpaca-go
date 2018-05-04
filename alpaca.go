@@ -176,7 +176,7 @@ func (f *Field) GetAttributes() {
 	}
 }
 
-// Register field adds the field to the field registry
+// RegisterField field adds the field to the field registry
 func (a *Alpaca) RegisterField(f *Field) {
 	a.FieldRegistry = append(a.FieldRegistry, f)
 }
