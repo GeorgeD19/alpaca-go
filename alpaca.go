@@ -50,14 +50,14 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 	return alpaca, nil
 }
 
-func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, start bool) *gabs.Container {
+func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk) *gabs.Container {
 	result := gabs.New()
 
 	switch chunk.Type {
 	case "array":
 		if chunk.Connector != nil {
 			result.Array(chunk.Value)
-			result.ArrayAppend(a.ParseFieldPath(f, chunk.Connector, false).Data(), chunk.Value)
+			result.ArrayAppend(a.ParseFieldPath(f, chunk.Connector).Data(), chunk.Value)
 		}
 		break
 	case "object":
@@ -68,9 +68,9 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, start bool) *gabs.Contai
 			}
 
 			if chunk.Value != "" && !isInt {
-				result.Set(a.ParseFieldPath(f, chunk.Connector, false).Data(), chunk.Value)
+				result.Set(a.ParseFieldPath(f, chunk.Connector).Data(), chunk.Value)
 			} else {
-				return a.ParseFieldPath(f, chunk.Connector, false)
+				return a.ParseFieldPath(f, chunk.Connector)
 			}
 		}
 		break
@@ -78,12 +78,7 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, start bool) *gabs.Contai
 		result.Set(f.Value, chunk.Value)
 	}
 
-	if !start {
-		return result
-	}
-
 	return result
-
 }
 
 // Parse takes field registry and parses it into json string
@@ -97,7 +92,7 @@ func (a *Alpaca) Parse() string {
 	results := make([]*gabs.Container, 0)
 	for _, f := range a.FieldRegistry {
 		if f.Value != nil && cast.ToString(f.Value) != "" {
-			results = append(results, a.ParseFieldPath(f, &f.Path[0], true))
+			results = append(results, a.ParseFieldPath(f, &f.Path[0]))
 		}
 	}
 
@@ -318,23 +313,14 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	case "array":
 		a.Array(f)
 		break
-	case "number":
-		a.Number(f)
-		break
 	case "object":
 		a.Object(f)
-		break
-	case "text":
-		a.Text(f)
 		break
 	case "camera":
 		a.Camera(f)
 		break
 	case "information":
 		a.Information(f)
-		break
-	case "repeatable":
-		a.Repeatable(f)
 		break
 	case "signature":
 		a.Signature(f)
