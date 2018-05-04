@@ -1,6 +1,14 @@
 package alpaca
 
 import (
+	"bytes"
+	"encoding/hex"
+	"image"
+	"io"
+	"mime"
+	"strconv"
+	"time"
+
 	"github.com/spf13/cast"
 )
 
@@ -46,42 +54,44 @@ func (a *Alpaca) Camera(f *Field) {
 		}
 
 		for x := 0; x < maxImage; x++ {
-			// FileName := f.Field.Key + "_image_" + strconv.Itoa(loop)
+			FileName := f.Key + "_image_" + strconv.Itoa(x)
 
-			// file, _, err := Request.FormFile(FileName)
-			// CreatedDevice := Request.FormValue(FileName + "_created")
+			file, _, err := a.request.FormFile(FileName)
+			CreatedDevice := a.request.FormValue(FileName + "_created")
 
-			// if err == nil {
-			// 	defer file.Close()
+			if err == nil {
+				defer file.Close()
 
-			// 	FoundFile := ImageFile{}
-			// 	var Buf bytes.Buffer
-			// 	io.Copy(&Buf, file)
-			// 	contents := Buf.Bytes()
-			// 	content := hex.EncodeToString(contents)
-			// 	FoundFile.Data = content
+				FoundFile := ImageFile{}
+				var Buf bytes.Buffer
+				io.Copy(&Buf, file)
+				contents := Buf.Bytes()
+				content := hex.EncodeToString(contents)
+				FoundFile.Data = content
 
-			// 	file, _, _ := Request.FormFile(FileName)
-			// 	config, format, _ := image.DecodeConfig(file)
-			// 	FoundFile.Name = FileName
-			// 	FoundFile.Width = config.Width
-			// 	FoundFile.Height = config.Height
-			// 	FoundFile.Type = format
-			// 	FoundFile.Mime = mime.TypeByExtension("." + format)
-			// 	FoundFile.FieldKey = f.Field.Key
+				file, _, _ := a.request.FormFile(FileName)
+				config, format, _ := image.DecodeConfig(file)
+				FoundFile.Name = FileName
+				FoundFile.Width = config.Width
+				FoundFile.Height = config.Height
+				FoundFile.Type = format
+				FoundFile.Mime = mime.TypeByExtension("." + format)
+				FoundFile.FieldKey = f.Key
+				FoundFile.FieldRef = f
 
-			// 	layout := "2006-01-02 15:04:05"
-			// 	t, err := time.Parse(layout, CreatedDevice)
-			// 	if err != nil {
-			// 		FoundFile.Created = time.Now()
-			// 	} else {
-			// 		FoundFile.Created = t
-			// 	}
+				layout := "2006-01-02 15:04:05"
+				t, err := time.Parse(layout, CreatedDevice)
+				if err != nil {
+					FoundFile.Created = time.Now()
+				} else {
+					FoundFile.Created = t
+				}
 
-			// 	MediaRegistry[FileName] = FoundFile
-			// 	f.Field.Media = append(f.Field.Media, FoundFile)
-			// 	Buf.Reset()
-			// }
+				a.MediaRegistry = append(a.MediaRegistry, FoundFile)
+				f.Media = append(f.Media, FoundFile)
+
+				Buf.Reset()
+			}
 		}
 	}
 
@@ -96,6 +106,7 @@ func (a *Alpaca) Information(f *Field) {
 
 // Signature container field
 func (a *Alpaca) Signature(f *Field) {
+	// TODO Pull across code from existing alpaca package
 	a.RegisterField(f)
 }
 

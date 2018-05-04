@@ -120,6 +120,7 @@ type Alpaca struct {
 	connector       string
 	request         *http.Request
 	FieldRegistry   []*Field
+	MediaRegistry   []ImageFile
 	UniqueIDCounter int
 }
 
@@ -160,12 +161,13 @@ type Field struct {
 
 // StandardFile type is a common base for files.
 type StandardFile struct {
-	Data    string
-	Type    string
-	Mime    string
-	Field   string
-	Name    string
-	Created time.Time
+	Data     string
+	Type     string
+	Mime     string
+	Field    string
+	Name     string
+	Created  time.Time
+	FieldRef *Field
 }
 
 // ImageFile type extends File type to track width & height of image.
