@@ -1,7 +1,13 @@
 package alpaca
 
 import (
+	"bytes"
+	"encoding/hex"
+	"image"
+	"io"
+	"mime"
 	"strconv"
+	"time"
 
 	"github.com/bradfitz/slice"
 	"github.com/spf13/cast"
@@ -57,7 +63,11 @@ func (a *Alpaca) ResolveItemSchemaOptions(key string, connector *Field, index in
 		schema = connector.Schema.S("items")
 	}
 
-	options := connector.Options
+	options := gabs.New()
+	if connector.Options.Exists("items") {
+		options = connector.Options.S("items")
+	}
+
 	data := connector.Data.Index(index)
 
 	a.CreateFieldInstance(cast.ToString(index), data, options, schema, connector, index, true)
@@ -106,6 +116,7 @@ func (a *Alpaca) GuessOptionsType(schema *gabs.Container) string {
 
 	} else {
 		fieldType := schema.S("type").Data()
+
 		if fieldType != nil {
 			if fieldType.(string) != "" {
 				optionType = DefaultSchemaFieldMapping[fieldType.(string)]
@@ -181,6 +192,49 @@ func (a *Alpaca) RegisterField(f *Field) {
 	a.FieldRegistry = append(a.FieldRegistry, f)
 }
 
+func (a *Alpaca) RegisterMedia(f *Field, index int) {
+
+	// This won't work since f.Key ignores all the chunks before hand. We need to regen the entire path
+	fileName := f.Key + "_image_" + strconv.Itoa(index)
+
+	file, _, err := a.request.FormFile(fileName)
+	CreatedDevice := a.request.FormValue(fileName + "_created")
+
+	if err == nil {
+		defer file.Close()
+
+		foundFile := ImageFile{}
+		var Buf bytes.Buffer
+		io.Copy(&Buf, file)
+		contents := Buf.Bytes()
+		content := hex.EncodeToString(contents)
+		foundFile.Data = content
+
+		file, _, _ := a.request.FormFile(fileName)
+		config, format, _ := image.DecodeConfig(file)
+		foundFile.Name = fileName
+		foundFile.Width = config.Width
+		foundFile.Height = config.Height
+		foundFile.Type = format
+		foundFile.Mime = mime.TypeByExtension("." + format)
+		foundFile.FieldKey = f.Key
+		foundFile.FieldRef = f
+
+		layout := "2006-01-02 15:04:05"
+		t, err := time.Parse(layout, CreatedDevice)
+		if err != nil {
+			foundFile.Created = time.Now()
+		} else {
+			foundFile.Created = t
+		}
+
+		a.MediaRegistry = append(a.MediaRegistry, foundFile)
+		f.Media = append(f.Media, foundFile)
+
+		Buf.Reset()
+	}
+}
+
 // CreateFieldInstance returns a new instance of the desired field based on the schema
 func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field, arrayIndex int, arrayChild bool) {
 
@@ -206,6 +260,8 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		if optionType != "" {
 			fieldType = optionType
 		}
+	} else {
+		fieldType = options.S("type").Data().(string)
 	}
 
 	f := &Field{
@@ -228,11 +284,16 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		}
 	}
 
+	if f.IsArrayChild && f.Value != nil {
+		f.Parent.ArrayValues++
+	}
+
 	f.Path = append(f.Path, Chunk{Type: f.Type, Value: f.Key, Field: f})
 
 	for i := range f.Path {
 		if i > 0 {
 			f.Path[i-1].Connector = &f.Path[i]
+			f.Path[i].Parent = &f.Path[i-1]
 		}
 	}
 

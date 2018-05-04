@@ -44,6 +44,7 @@ func TestArrayField(t *testing.T) {
 				},
 				"nest": {
 					"type": "array",
+					"maxItems": 3,
 					"items": {
 						"type": "object",
 						"properties": {
