@@ -50,85 +50,7 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 	return alpaca, nil
 }
 
-func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk) *gabs.Container {
-	result := gabs.New()
-
-	switch chunk.Type {
-	case "array":
-		if chunk.Connector != nil {
-			result.Array(chunk.Value)
-			result.ArrayAppend(a.ParseFieldPath(f, chunk.Connector).Data(), chunk.Value)
-		}
-		break
-	case "object":
-		if chunk.Connector != nil {
-			isInt := false
-			if _, err := strconv.Atoi(chunk.Value); err == nil {
-				isInt = true
-			}
-
-			if chunk.Value != "" && !isInt {
-				result.Set(a.ParseFieldPath(f, chunk.Connector).Data(), chunk.Value)
-			} else {
-				return a.ParseFieldPath(f, chunk.Connector)
-			}
-		}
-		break
-	default:
-		result.Set(f.Value, chunk.Value)
-	}
-
-	return result
-}
-
-// Parse takes field registry and parses it into json string
-func (a *Alpaca) Parse() string {
-	result := gabs.New()
-
-	if len(a.FieldRegistry) < 2 {
-		return `"` + cast.ToString(a.FieldRegistry[0].Value) + `"`
-	}
-
-	results := make([]*gabs.Container, 0)
-	for _, f := range a.FieldRegistry {
-		if f.Value != nil && cast.ToString(f.Value) != "" {
-			results = append(results, a.ParseFieldPath(f, &f.Path[0]))
-		}
-	}
-
-	for _, generated := range results {
-		result.Merge(generated)
-	}
-
-	return result.String()
-}
-
-// PathString returns combined path string - decrepit
-func (f *Field) PathString(depth int) (path string, chunks []string) {
-	result := make([]string, 0)
-	strResult := ""
-
-	for _, chunk := range f.Path {
-		if chunk.Type != "object" {
-			if strResult != "" {
-				strResult += "." + chunk.Value
-				result = append(result, chunk.Value)
-			} else {
-				strResult = chunk.Value
-				result = append(result, chunk.Value)
-			}
-		} else if chunk.Type == "array" {
-			strResult += "[" + chunk.Value + "]"
-		}
-	}
-
-	return strResult, result
-}
-
-func (a *Alpaca) RegisterField(f *Field) {
-	a.FieldRegistry = append(a.FieldRegistry, f)
-}
-
+// ResolveItemSchemaOptions resolves the items in an array container field
 func (a *Alpaca) ResolveItemSchemaOptions(key string, connector *Field, index int) {
 	schema := gabs.New()
 	if connector.Schema.Exists("items") {
@@ -141,6 +63,7 @@ func (a *Alpaca) ResolveItemSchemaOptions(key string, connector *Field, index in
 	a.CreateFieldInstance(cast.ToString(index), data, options, schema, connector, index, true)
 }
 
+// ResolvePropertySchemaOptions resolves the properties in an object container field
 func (a *Alpaca) ResolvePropertySchemaOptions(key string, connector *Field) {
 
 	schema := gabs.New()
@@ -253,6 +176,11 @@ func (f *Field) GetAttributes() {
 	}
 }
 
+// Register field adds the field to the field registry
+func (a *Alpaca) RegisterField(f *Field) {
+	a.FieldRegistry = append(a.FieldRegistry, f)
+}
+
 // CreateFieldInstance returns a new instance of the desired field based on the schema
 func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field, arrayIndex int, arrayChild bool) {
 
@@ -302,7 +230,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	f.Path = append(f.Path, Chunk{Type: f.Type, Value: f.Key, Field: f})
 
-	for i, _ := range f.Path {
+	for i := range f.Path {
 		if i > 0 {
 			f.Path[i-1].Connector = &f.Path[i]
 		}
