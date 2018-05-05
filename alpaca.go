@@ -169,7 +169,6 @@ func (f *Field) GetAttributes() {
 		f.Order = cast.ToInt(f.Options.S("order").Data())
 	}
 
-	// Here we can do some fancy logic if the field is an array field
 	if f.Data.Data() != nil {
 		f.Value = f.Data.Data()
 	}

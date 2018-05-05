@@ -3,73 +3,14 @@ package alpaca
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Jeffail/gabs"
 	"github.com/spf13/cast"
 )
 
-// FirstFieldPath returns the first chunk of the path we are currently on
-func (a *Alpaca) FirstFieldPath(chunk *Chunk) *Chunk {
-	if chunk.Parent != nil {
-		return a.FirstFieldPath(chunk.Parent)
-	}
-	return chunk
-}
-
-// LastFieldPath returns the first chunk of the path we are currently on
-func (a *Alpaca) LastFieldPath(chunk *Chunk) *Chunk {
-	if chunk.Connector != nil {
-		return a.LastFieldPath(chunk.Connector)
-	}
-	return chunk
-}
-
-func (a *Alpaca) DiveDeeper(chunk *Chunk, generated *gabs.Container) *gabs.Container {
-
-	switch chunk.Type {
-	case "array":
-	case "object":
-		// If integer we need to use index
-		if generated.Exists(chunk.Value) {
-			if chunk.Connector != nil {
-				return a.DiveDeeper(chunk.Connector, generated.S(chunk.Value))
-			} else {
-				return generated.S(chunk.Value)
-			}
-		} else {
-			if chunk.Connector != nil {
-				return a.DiveDeeper(chunk.Connector, generated.S(chunk.Value))
-			} else {
-				return generated
-			}
-		}
-		break
-	default:
-		if generated.Exists(chunk.Value) {
-			return generated.S(chunk.Value)
-		}
-	}
-	return generated
-
-}
-
-func (a *Alpaca) DiveFieldPath(chunk *Chunk, generated *gabs.Container) *gabs.Container {
-	// generated will be starting at the left, and chunk will be starting at the right
-
-	root := a.FirstFieldPath(chunk)
-
-	// We get the root field for the current drunk and for every connector dive deeper down the generated container then we can affect it instead
-	generated = a.DiveDeeper(root, generated)
-
-	return generated
-}
-
 // ParseFieldPath reconstructs JSON based on the field path
 func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Container) *gabs.Container {
-
-	// Dive to the current position within the generated container
-	// currentPath := a.DiveFieldPath(chunk, generated)
-	// result := a.DiveFieldPath(chunk, generated)
 
 	switch chunk.Type {
 	case "array":
@@ -79,12 +20,9 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 			}
 
 			arrayVal := generated.S(chunk.Value)
-
-			// fmt.Println(generated.String())
 			if chunk.Connector != nil {
 				a.ParseFieldPath(f, chunk.Connector, arrayVal)
 			}
-			// 		result.ArrayAppend(a.ParseFieldPath(f, chunk.Connector, generated).Data(), chunk.Value)
 		}
 		break
 	case "object":
@@ -95,43 +33,30 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 			isInt = true
 		}
 
-		if !generated.Exists(chunk.Value) && !isInt && chunk.Value != "" {
-			generated.Set("", chunk.Value)
-		}
-
 		if isInt {
-			// generated.Index(intVal)
 			arrayValue := gabs.New()
-			// generated.S(chunk.Parent.Value).SetIndex
 
 			item := a.ParseFieldPath(f, chunk.Connector, arrayValue)
-			// TOFIX - Only merge if part of the same object
-			if generated.Index(intVal).Data() != nil && chunk.Field.Type == "object" {
+			if generated.Index(intVal).Data() != nil && chunk.Parent.Type == "object" {
 				item.Merge(generated.Index(intVal))
 			}
 
 			generated.SetIndex(item.Data(), intVal)
 
 		} else {
-			// struggles with nested objects
-			item := generated.S(chunk.Value)
-			if item == nil {
-				item = generated
-			}
 			if chunk.Connector != nil {
-				a.ParseFieldPath(f, chunk.Connector, item)
+				if chunk.Value != "" {
+					generated.Set(a.ParseFieldPath(f, chunk.Connector, generated.S(chunk.Value)).Data(), chunk.Value)
+				} else {
+					return a.ParseFieldPath(f, chunk.Connector, generated)
+				}
 			}
 		}
-
-		// if chunk.Connector != nil {
-		// if chunk.Value != "" && !isInt {
-		// generated.Set(a.ParseFieldPath(f, chunk.Connector, generated).Data(), chunk.Value)
-		// } else {
-		// return a.ParseFieldPath(f, chunk.Connector, generated)
-		// }
-		// }
 		break
 	default:
+		if generated == nil {
+			generated = gabs.New()
+		}
 		generated.Set(f.Value, chunk.Value)
 	}
 
@@ -143,7 +68,19 @@ func (a *Alpaca) Parse() string {
 	result := gabs.New()
 
 	if len(a.FieldRegistry) < 2 {
-		return `"` + cast.ToString(a.FieldRegistry[0].Value) + `"`
+		for _, f := range a.FieldRegistry {
+			switch v := f.Value.(type) {
+			case string:
+				// v is a string here, so e.g. v + " Yeah!" is possible.
+				data := strings.TrimSpace(f.Value.(string))
+				// Use the json minifier here before we add the additional ""
+				return `"` + data + `"`
+
+			default:
+				data := cast.ToString(v)
+				return `"` + data + `"`
+			}
+		}
 	}
 
 	for _, f := range a.FieldRegistry {
@@ -153,7 +90,7 @@ func (a *Alpaca) Parse() string {
 			a.ParseFieldPath(f, &f.Path[0], result)
 		}
 	}
-
+	fmt.Println(result.Data())
 	return result.String()
 }
 
