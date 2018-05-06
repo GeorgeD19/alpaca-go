@@ -1,6 +1,10 @@
 package alpaca
 
 import (
+	"bytes"
+	"encoding/json"
+	"strings"
+
 	"github.com/spf13/cast"
 )
 
@@ -69,5 +73,29 @@ func (a *Alpaca) Signature(f *Field) {
 
 // Any control field
 func (a *Alpaca) Any(f *Field) {
+	a.RegisterField(f)
+}
+
+func (a *Alpaca) Editor(f *Field) {
+	JSON := []byte(f.Data.String())
+	buffer := new(bytes.Buffer)
+	if err := json.Compact(buffer, JSON); err != nil {
+		f.Value = f.Data.Data()
+	}
+	f.Value = strings.TrimSuffix(strings.TrimPrefix(cast.ToString(buffer), `"`), `"`)
+	a.RegisterField(f)
+}
+
+func (a *Alpaca) JSON(f *Field) {
+	a.Editor(f)
+}
+
+func (a *Alpaca) Lowercase(f *Field) {
+	f.Value = strings.TrimSuffix(strings.TrimPrefix(strings.ToLower(f.Data.String()), `"`), `"`)
+	a.RegisterField(f)
+}
+
+func (a *Alpaca) Uppercase(f *Field) {
+	f.Value = strings.TrimSuffix(strings.TrimPrefix(strings.ToUpper(f.Data.String()), `"`), `"`)
 	a.RegisterField(f)
 }

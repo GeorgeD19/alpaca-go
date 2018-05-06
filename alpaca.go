@@ -307,11 +307,26 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	case "camera":
 		a.Camera(f)
 		break
+	case "lowercase":
+		a.Lowercase(f)
+		break
+	case "uppercase":
+		a.Uppercase(f)
+		break
+	case "image":
+		a.Information(f)
+		break
 	case "information":
 		a.Information(f)
 		break
 	case "signature":
 		a.Signature(f)
+		break
+	case "editor":
+		a.Editor(f)
+		break
+	case "json":
+		a.JSON(f)
 		break
 	default:
 		a.Any(f)

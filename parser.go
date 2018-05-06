@@ -1,9 +1,7 @@
 package alpaca
 
 import (
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Jeffail/gabs"
 	"github.com/spf13/cast"
@@ -68,29 +66,27 @@ func (a *Alpaca) Parse() string {
 	result := gabs.New()
 
 	if len(a.FieldRegistry) < 2 {
-		for _, f := range a.FieldRegistry {
-			switch v := f.Value.(type) {
-			case string:
-				// v is a string here, so e.g. v + " Yeah!" is possible.
-				data := strings.TrimSpace(f.Value.(string))
-				// Use the json minifier here before we add the additional ""
-				return `"` + data + `"`
-
-			default:
-				data := cast.ToString(v)
-				return `"` + data + `"`
-			}
+		if a.FieldRegistry[0].IsContainerField {
+			return `""`
 		}
+
+		switch v := a.FieldRegistry[0].Value.(type) {
+		case int:
+			return cast.ToString(v)
+		case float64:
+			return cast.ToString(v)
+		default:
+			return `"` + cast.ToString(v) + `"`
+		}
+
 	}
 
 	for _, f := range a.FieldRegistry {
-
 		if f.Value != nil && cast.ToString(f.Value) != "" {
-			fmt.Println(f.Value)
 			a.ParseFieldPath(f, &f.Path[0], result)
 		}
 	}
-	fmt.Println(result.Data())
+
 	return result.String()
 }
 
