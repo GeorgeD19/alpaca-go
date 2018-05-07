@@ -11,7 +11,7 @@ import (
 func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Container) *gabs.Container {
 
 	switch chunk.Type {
-	case "array":
+	case "repeatable", "array":
 		if chunk.Connector != nil {
 			if !generated.Exists(chunk.Value) {
 				generated.ArrayOfSize(chunk.Field.ArrayValues, chunk.Value)
@@ -104,7 +104,7 @@ func (f *Field) PathString(depth int) (path string, chunks []string) {
 				strResult = chunk.Value
 				result = append(result, chunk.Value)
 			}
-		} else if chunk.Type == "array" {
+		} else if chunk.Type == "array" || chunk.Type == "repeatable" {
 			strResult += "[" + chunk.Value + "]"
 		}
 	}

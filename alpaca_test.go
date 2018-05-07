@@ -1925,7 +1925,21 @@ func TestAshdownPhillipsSiteReportForm(t *testing.T) {
 		"incident_report_position": "Some position",
 		"incident_report_datetime": "21/11/20",
 		"incident_report_incident_type": "Other",
-		"incident_report_incident_other": "Other type"
+		"incident_report_incident_other": "Other type",
+		"incident_report_images": [
+			{
+				"name": "name1",
+				"image": "image1"
+			},
+			{
+				"name": "name2",
+				"image": "image2"
+			},
+			{
+				"name": "name3",
+				"image": "image3"
+			}
+		]
 	}`
 
 	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
@@ -1934,7 +1948,7 @@ func TestAshdownPhillipsSiteReportForm(t *testing.T) {
 	}
 
 	result := alpaca.Parse()
-	if result != `{"comments":"Bleh","date":"12/04/18","form_reference":"PS HR Dec 17 Ref:001","hazard_type":"Some hazard type","location":"Some location","picture":"[Image]","risk_profile":"Low - 6 Hours","site":"Holborn","time":"00:12:40"}` {
-		t.Fatalf(`Should return {"comments":"Bleh","date":"12/04/18","form_reference":"PS HR Dec 17 Ref:001","hazard_type":"Some hazard type","location":"Some location","picture":"[Image]","risk_profile":"Low - 6 Hours","site":"Holborn","time":"00:12:40"}, instead returned %s`, result)
+	if result != `{"form_reference":"SL Feb 17 Ref:C003","form_type":"Incident Report","incident_report_completed_by":"Some person","incident_report_datetime":"21/11/20","incident_report_images":[{"image":"image1"},{"image":"image2"},{"image":"image3"}],"incident_report_incident_other":"Other type","incident_report_incident_type":"Other","incident_report_position":"Some position","site":"Holborn"}` {
+		t.Fatalf(`Should return {"form_reference":"SL Feb 17 Ref:C003","form_type":"Incident Report","incident_report_completed_by":"Some person","incident_report_datetime":"21/11/20","incident_report_images":[{"image":"image1"},{"image":"image2"},{"image":"image3"}],"incident_report_incident_other":"Other type","incident_report_incident_type":"Other","incident_report_position":"Some position","site":"Holborn"}, instead returned %s`, result)
 	}
 }

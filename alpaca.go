@@ -298,7 +298,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	// Not all field types are required for definition, many share the same basic behaviour as Any
 	switch f.Type {
-	case "array":
+	case "array", "repeatable":
 		a.Array(f)
 		break
 	case "object":
@@ -313,10 +313,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	case "uppercase":
 		a.Uppercase(f)
 		break
-	case "image":
-		a.Information(f)
-		break
-	case "information":
+	case "information", "image":
 		a.Information(f)
 		break
 	case "signature":
