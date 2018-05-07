@@ -11,15 +11,32 @@ import (
 func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Container) *gabs.Container {
 
 	switch chunk.Type {
-	case "repeatable", "array":
+	case "repeatable", "array", "select":
 		if chunk.Connector != nil {
-			if !generated.Exists(chunk.Value) {
-				generated.ArrayOfSize(chunk.Field.ArrayValues, chunk.Value)
-			}
+			if chunk.Field.ArrayValues > 0 {
 
-			arrayVal := generated.S(chunk.Value)
-			if chunk.Connector != nil {
-				a.ParseFieldPath(f, chunk.Connector, arrayVal)
+				if chunk.Value != "" {
+					if !generated.Exists(chunk.Value) {
+						generated.ArrayOfSize(chunk.Field.ArrayValues, chunk.Value)
+					}
+
+					arrayVal := generated.S(chunk.Value)
+					if chunk.Connector != nil {
+						if chunk.Connector.Type != "array" && chunk.Connector.Type != "select" && chunk.Connector.Type != "repeatable" && chunk.Connector.Type != "object" {
+							intVal := 0
+							if v, err := strconv.Atoi(chunk.Connector.Value); err == nil {
+								intVal = v
+							}
+
+							arrayVal.SetIndex(f.Value, intVal)
+						} else {
+							a.ParseFieldPath(f, chunk.Connector, arrayVal)
+						}
+					}
+				} else {
+					generated.Set(f.Parent.Data.Data())
+				}
+
 			}
 		}
 		break
@@ -70,13 +87,19 @@ func (a *Alpaca) Parse() string {
 			return `""`
 		}
 
+		// return cast.ToString(a.FieldRegistry[0].Value)
+
 		switch v := a.FieldRegistry[0].Value.(type) {
 		case int:
 			return cast.ToString(v)
 		case float64:
 			return cast.ToString(v)
 		default:
-			return `"` + cast.ToString(v) + `"`
+			if a.FieldRegistry[0].Type != "select" && a.FieldRegistry[0].Type != "json" && a.FieldRegistry[0].Type != "tag" {
+				return `"` + cast.ToString(v) + `"`
+			}
+			return cast.ToString(v)
+
 		}
 
 	}

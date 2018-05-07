@@ -3,6 +3,7 @@ package alpaca
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cast"
@@ -17,12 +18,28 @@ func (a *Alpaca) Array(f *Field) {
 		maxItems = cast.ToInt(f.Schema.S("maxItems").Data().(float64))
 	}
 
+	isInt := false
+	intVal := 0
+	if v, err := strconv.Atoi(f.Key); err == nil {
+		intVal = v
+		isInt = true
+	}
+
 	if f.Schema.Exists("items") {
 		for x := 0; x < maxItems; x++ {
 			a.ResolveItemSchemaOptions(f.Key, f, x)
 		}
+	} else if isInt {
+		if f.SchemaType == "" {
+			a.ResolveItemSchemaOptions(f.Key, f, intVal)
+		}
 	}
 
+	a.RegisterField(f)
+}
+
+func (a *Alpaca) Tag(f *Field) {
+	f.Value = strings.TrimSuffix(strings.TrimPrefix(f.Data.String(), `"`), `"`)
 	a.RegisterField(f)
 }
 

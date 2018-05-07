@@ -79,6 +79,9 @@ type Field struct {
 	ID                  string
 	Key                 string
 	Title               string
+	SchemaType          string
+	ChunkType           string
+	OptionsType         string
 	Type                string
 	Path                []Chunk
 	Validate            string

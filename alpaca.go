@@ -58,17 +58,32 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 
 // ResolveItemSchemaOptions resolves the items in an array container field
 func (a *Alpaca) ResolveItemSchemaOptions(key string, connector *Field, index int) {
+
+	isInt := false
+	if _, err := strconv.Atoi(key); err == nil {
+		isInt = true
+	}
+
 	schema := gabs.New()
+	if isInt {
+		schema = connector.Schema
+	}
 	if connector.Schema.Exists("items") {
 		schema = connector.Schema.S("items")
 	}
 
 	options := gabs.New()
+	if isInt {
+		options = connector.Options
+	}
 	if connector.Options.Exists("items") {
 		options = connector.Options.S("items")
 	}
 
 	data := connector.Data.Index(index)
+	if isInt {
+		data = connector.Data
+	}
 
 	a.CreateFieldInstance(cast.ToString(index), data, options, schema, connector, index, true)
 }
@@ -238,12 +253,13 @@ func (a *Alpaca) RegisterMedia(f *Field, index int) {
 func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field, arrayIndex int, arrayChild bool) {
 
 	fieldType := ""
+	schemaType := ""
 
 	if options.Exists("type") == false {
 
 		// if nothing passed in, we can try to make a guess based on the type of data
 		if schema.Exists("type") == false {
-			schemaType := a.GetSchemaType(data)
+			schemaType = a.GetSchemaType(data)
 
 			if schemaType != "" {
 				fieldType = schemaType
@@ -253,6 +269,8 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		// if nothing passed in, fallback to defaults
 		if schema.Exists("type") == false {
 			fieldType = "object" // fallback
+		} else {
+			schemaType = schema.S("type").Data().(string)
 		}
 
 		optionType := a.GuessOptionsType(schema)
@@ -269,10 +287,16 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		Data:         data,
 		Key:          key,
 		Type:         fieldType,
+		SchemaType:   schemaType,
+		ChunkType:    fieldType,
 		Parent:       connector,
 		IsArrayChild: arrayChild,
 		ArrayIndex:   arrayIndex,
 		ArrayValues:  0,
+	}
+
+	if fieldType == "select" && schemaType != "" {
+		f.ChunkType = schemaType
 	}
 
 	f.GetAttributes()
@@ -287,7 +311,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		f.Parent.ArrayValues++
 	}
 
-	f.Path = append(f.Path, Chunk{Type: f.Type, Value: f.Key, Field: f})
+	f.Path = append(f.Path, Chunk{Type: f.ChunkType, Value: f.Key, Field: f})
 
 	for i := range f.Path {
 		if i > 0 {
@@ -298,11 +322,14 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	// Not all field types are required for definition, many share the same basic behaviour as Any
 	switch f.Type {
-	case "array", "repeatable":
+	case "array", "repeatable", "select":
 		a.Array(f)
 		break
 	case "object":
 		a.Object(f)
+		break
+	case "tag":
+		a.Tag(f)
 		break
 	case "camera":
 		a.Camera(f)

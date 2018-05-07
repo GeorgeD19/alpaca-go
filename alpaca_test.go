@@ -334,8 +334,8 @@ func TestSelectField(t *testing.T) {
 	}
 
 	result := alpaca.Parse()
-	if result != `["Vanilla", "Chocolate"]` {
-		t.Fatalf(`Should return ["Vanilla", "Chocolate"], instead returned %s`, result)
+	if result != `["Vanilla","Chocolate"]` {
+		t.Fatalf(`Should return ["Vanilla","Chocolate"], instead returned %s`, result)
 	}
 }
 
@@ -403,28 +403,29 @@ func TestTextField1(t *testing.T) {
 
 // More Fields
 // http://www.alpacajs.org/docs/fields/address.html
-func TestAddressField(t *testing.T) {
-	schema := `{
-		"schema": {
-			"title": "Home Address",
-			"type": "any"
-		},
-		"options": {
-			"type": "address"
-		}
-	}`
-	data := `{"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}`
+// Unsupported
+// func TestAddressField(t *testing.T) {
+// 	schema := `{
+// 		"schema": {
+// 			"title": "Home Address",
+// 			"type": "any"
+// 		},
+// 		"options": {
+// 			"type": "address"
+// 		}
+// 	}`
+// 	data := `{"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}`
 
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("TestAddressField error: %s", err)
-	}
+// 	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
+// 	if err != nil {
+// 		t.Fatalf("TestAddressField error: %s", err)
+// 	}
 
-	result := alpaca.Parse()
-	if result != `{"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}` {
-		t.Fatalf(`Should return {"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}, instead returned %s`, result)
-	}
-}
+// 	result := alpaca.Parse()
+// 	if result != `{"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}` {
+// 		t.Fatalf(`Should return {"street":["street 1","street 2","street 3"],"city":"glasgow","state":"AL","zip":"23233"}, instead returned %s`, result)
+// 	}
+// }
 
 func TestChooserField(t *testing.T) {
 
@@ -678,13 +679,23 @@ func TestIntegerField(t *testing.T) {
 	}
 }
 
-func TestObjectIntegerField(t *testing.T) {
+func TestObjectMixedField(t *testing.T) {
 	schema := `{
 		"schema": {
-			"type":"object",
+			"type": "object",
 			"properties": {
 				"integerfield": {
 					"type": "string"
+				},
+				"selectfield": {
+					"type": "array",
+					"items": {
+						"title": "Ice Cream",
+						"type": "string",
+						"enum": ["Vanilla", "Chocolate", "Strawberry", "Mint"]
+					},
+					"minItems": 2,
+					"maxItems": 3
 				}
 			}
 		},
@@ -692,11 +703,15 @@ func TestObjectIntegerField(t *testing.T) {
 			"fields": {
 				"integerfield": {
 					"type": "integer"
+				},
+				"selectfield": {
+					"type": "select"
 				}
 			}
 		}
 	}`
-	data := `{"integerfield":17}`
+
+	data := `{"integerfield":17,"selectfield":["Vanilla","Chocolate"]}`
 
 	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
 	if err != nil {
@@ -704,8 +719,8 @@ func TestObjectIntegerField(t *testing.T) {
 	}
 
 	result := alpaca.Parse()
-	if result != `{"integerfield":17}` {
-		t.Fatalf(`Should return {"integerfield":17}, instead returned %s`, result)
+	if result != `{"integerfield":17,"selectfield":["Vanilla","Chocolate"]}` {
+		t.Fatalf(`Should return {"integerfield":17,"selectfield":["Vanilla","Chocolate"]}, instead returned %s`, result)
 	}
 }
 
@@ -766,69 +781,70 @@ func TestLowerCaseField(t *testing.T) {
 	}
 }
 
-func TestMapField(t *testing.T) {
-	schema := `{
-		"schema": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"_key": {
-						"title": "User ID",
-						"type": "string"
-					},
-					"firstName": {
-						"title": "First Name",
-						"type": "string"
-					},
-					"lastName": {
-						"title": "Last Name",
-						"type": "string"
-					},
-					"gender": {
-						"title": "Gender",
-						"type": "string",
-						"enum": ["Male", "Female"]
-					}
-				}
-			}
-		},
-		"options": {
-			"type": "map",
-			"toolbarSticky": true,
-			"items": {
-				"fields": {
-					"_key": {
-						"size": 60,
-						"helper": "This value serves as a unique key into the associative array."
-					}
-				}
-			}
-		}
-	}`
-	data := `{
-        "john316": {
-            "firstName": "Tim",
-            "lastName": "Tebow",
-            "gender": "Male"
-        },
-        "ladygaga": {
-            "firstName": "Stefani",
-            "lastName": "Germanotta",
-            "gender": "Female"
-        }
-    }`
+// Unsupported
+// func TestMapField(t *testing.T) {
+// 	schema := `{
+// 		"schema": {
+// 			"type": "array",
+// 			"items": {
+// 				"type": "object",
+// 				"properties": {
+// 					"_key": {
+// 						"title": "User ID",
+// 						"type": "string"
+// 					},
+// 					"firstName": {
+// 						"title": "First Name",
+// 						"type": "string"
+// 					},
+// 					"lastName": {
+// 						"title": "Last Name",
+// 						"type": "string"
+// 					},
+// 					"gender": {
+// 						"title": "Gender",
+// 						"type": "string",
+// 						"enum": ["Male", "Female"]
+// 					}
+// 				}
+// 			}
+// 		},
+// 		"options": {
+// 			"type": "map",
+// 			"toolbarSticky": true,
+// 			"items": {
+// 				"fields": {
+// 					"_key": {
+// 						"size": 60,
+// 						"helper": "This value serves as a unique key into the associative array."
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}`
+// 	data := `{
+//         "john316": {
+//             "firstName": "Tim",
+//             "lastName": "Tebow",
+//             "gender": "Male"
+//         },
+//         "ladygaga": {
+//             "firstName": "Stefani",
+//             "lastName": "Germanotta",
+//             "gender": "Female"
+//         }
+//     }`
 
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
+// 	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
+// 	if err != nil {
+// 		t.Fatalf("error: %s", err)
+// 	}
 
-	result := alpaca.Parse()
-	if result != `19` {
-		t.Fatalf(`Should return 19, instead returned %s`, result)
-	}
-}
+// 	result := alpaca.Parse()
+// 	if result != `19` {
+// 		t.Fatalf(`Should return 19, instead returned %s`, result)
+// 	}
+// }
 
 // Option Tree Field http://www.alpacajs.org/docs/fields/optiontree.html
 func TestOptionTreeField(t *testing.T) {
@@ -1070,8 +1086,8 @@ func TestTagField(t *testing.T) {
 	}
 
 	result := alpaca.Parse()
-	if result != `["great", "wonderful", "ice cream"]` {
-		t.Fatalf(`Should return ["great", "wonderful", "ice cream"], instead returned %s`, result)
+	if result != `["great","wonderful","ice cream"]` {
+		t.Fatalf(`Should return ["great","wonderful","ice cream"], instead returned %s`, result)
 	}
 }
 
@@ -1192,763 +1208,5 @@ func TestZipCodeField(t *testing.T) {
 	result := alpaca.Parse()
 	if result != `"53221"` {
 		t.Fatalf(`Should return "53221", instead returned %s`, result)
-	}
-}
-
-// Forms
-func TestORSORDERForm(t *testing.T) {
-	schema := `{
-		"options": {
-			"fields": {
-				"actions_taken": {
-					"order": 3
-				},
-				"client_managers_name": {
-					"order": 1
-				},
-				"details_of_problem": {
-					"order": 2
-				},
-				"fix_term": {
-					"order": 4,
-					"type": "select"
-				},
-				"manager_director_name": {
-					"order": 5
-				},
-				"reference": {
-					"order": 7
-				},
-				"signature": {
-					"order": 6,
-					"type": "signature"
-				}
-			}
-		},
-		"schema": {
-			"properties": {
-				"actions_taken": {
-					"required": true,
-					"title": "What actions have been taken?",
-					"type": "string"
-				},
-				"client_managers_name": {
-					"required": true,
-					"title": "Client Manager's name",
-					"type": "string"
-				},
-				"details_of_problem": {
-					"required": true,
-					"title": "Details of problem",
-					"type": "string"
-				},
-				"fix_term": {
-					"enum": ["Yes", "No"],
-					"required": true,
-					"title": "Is the problem fixed for the long term?",
-					"type": "string"
-				},
-				"manager_director_name": {
-					"required": true,
-					"title": "SecuriGroup Manager / Director name",
-					"type": "string"
-				},
-				"reference": {
-					"default": "SL Feb 17 Ref:C069",
-					"readonly": true,
-					"title": "Form reference",
-					"type": "string"
-				},
-				"signature": {
-					"required": true,
-					"title": "Signature",
-					"type": "string"
-				}
-			},
-			"type": "object"
-		}
-	}`
-
-	data := `{
-		"actions_taken": "None",
-		"client_managers_name": "Winnie The Poo",
-		"details_of_problem": "Humpty Dumpty fell off the wall.",
-		"fix_term": "Yes",
-		"manager_director_name": "Tigger",
-		"signature": "[Signature]"
-	}`
-
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-
-	result := alpaca.Parse()
-	if result != `{"actions_taken":"None","client_managers_name":"Winnie The Poo","details_of_problem":"Humpty Dumpty fell off the wall.","fix_term":"Yes","manager_director_name":"Tigger","reference":"SL Feb 17 Ref:C069","signature":"[Signature]"}` {
-		t.Fatalf(`Should return {"actions_taken":"None","client_managers_name":"Winnie The Poo","details_of_problem":"Humpty Dumpty fell off the wall.","fix_term":"Yes","manager_director_name":"Tigger","reference":"SL Feb 17 Ref:C069","signature":"[Signature]"}, instead returned %s`, result)
-	}
-}
-
-func TestOEVLate1Form(t *testing.T) {
-	schema := `{
-		"schema": {
-			"properties": {
-				"oev_incomplete_information": {
-					"description": "This OEV was overdue from last month, you know how important that these are completed on time!",
-					"type": "information"
-				},
-				"oev_incomplete_reason": {
-					"required": true,
-					"title": "Why was the OEV not completed within the allotted month?",
-					"type": "string"
-				},
-				"oev_completion_date": {
-					"title": "When in the next 7 days are you planning to do this OEV?",
-					"required": true,
-					"type": "string"
-				},
-				"reference": {
-					"default": "SL Feb 17 Ref:C060",
-					"readonly": true,
-					"title": "Form reference",
-					"type": "string"
-				}
-			},
-			"type": "object"
-		},
-		"options": {
-			"fields": {
-				"oev_incomplete_information": {
-					"order": 1
-				},
-				"oev_incomplete_reason": {
-					"order": 2
-				},
-				"oev_completion_date": {
-					"order": 3,
-					"type": "date"
-				},
-				"reference": {
-					"order": 4
-				}
-			}
-		}
-	}`
-
-	data := `{
-		"oev_incomplete_reason": "My dog ate it.",
-		"oev_completion_date": "15/10/01"
-	}`
-
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-
-	result := alpaca.Parse()
-	if result != `{"oev_completion_date":"15/10/01","oev_incomplete_reason":"My dog ate it.","reference":"SL Feb 17 Ref:C060"}` {
-		t.Fatalf(`Should return {"oev_completion_date":"15/10/01","oev_incomplete_reason":"My dog ate it.","reference":"SL Feb 17 Ref:C060"}, instead returned %s`, result)
-	}
-}
-
-func TestNOTESForm(t *testing.T) {
-	schema := `{
-		"options": {
-			"fields": {
-				"notes": {
-					"order": 1,
-					"type": "textarea"
-				},
-				"reference": {
-					"order": 2
-				}
-			}
-		},
-		"schema": {
-			"properties": {
-				"notes": {
-					"required": true,
-					"title": "Please update some details.",
-					"type": "string"
-				},
-				"reference": {
-					"default": "SL Feb 17 Ref:C056",
-					"readonly": true,
-					"title": "Form reference",
-					"type": "string"
-				}
-			},
-			"type": "object"
-		}
-	}`
-
-	data := `{
-		"notes": "Some notes."
-	}`
-
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-
-	result := alpaca.Parse()
-	if result != `{"notes":"Some notes.","reference":"SL Feb 17 Ref:C056"}` {
-		t.Fatalf(`Should return {"notes":"Some notes.","reference":"SL Feb 17 Ref:C056"}, instead returned %s`, result)
-	}
-}
-
-func TestPearsonHazardReportForm(t *testing.T) {
-	schema := `{
-		"schema": {
-			"type": "object",
-			"properties": {
-				"date": {
-					"type": "string",
-					"title": "Date",
-					"required": true
-				},
-				"time": {
-					"type": "string",
-					"title": "Time",
-					"required": true
-				},
-				"site": {
-					"type": "string",
-					"title": "Site",
-					"enum": ["Holborn", "Fretwell Road", "Lowton House", "Jordan Hill"],
-					"required": true
-				},
-				"hazard_type": {
-					"type": "string",
-					"title": "Hazard Type",
-					"required": true
-				},
-				"location": {
-					"type": "string",
-					"title": "Location",
-					"required": true
-				},
-				"risk_profile": {
-					"type": "string",
-					"title": "Risk Profile + Resolution Time",
-					"enum": ["Low - 6 Hours", "Medium - 1 Hour", "High - Immediately"],
-					"required": true
-				},
-				"picture": {
-					"type": "string",
-					"title": "Picture",
-					"required": true
-				},
-				"comments": {
-					"type": "string",
-					"title": "comments"
-				},
-				"form_reference": {
-					"type": "string",
-					"title": "Form Reference",
-					"default": "PS HR Dec 17 Ref:001",
-					"readonly": true
-				}
-			}
-		},
-		"options": {
-			"fields": {
-				"date": {
-					"type": "date"
-				},
-				"time": {
-					"type": "time"
-				},
-				"site": {
-					"removeDefaultNone": false,
-					"sort": false
-				},
-				"picture": {
-					"type": "camera"
-				},
-				"comments": {
-					"type": "textarea"
-				}
-			}
-		}
-	}`
-
-	data := `{
-		"date": "12/04/18",
-		"time": "00:12:40",
-		"site": "Holborn",
-		"hazard_type": "Some hazard type",
-		"location": "Some location",
-		"risk_profile": "Low - 6 Hours",
-		"picture": "[Image]",
-		"comments": "Bleh"
-	}`
-
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-
-	result := alpaca.Parse()
-	if result != `{"comments":"Bleh","date":"12/04/18","form_reference":"PS HR Dec 17 Ref:001","hazard_type":"Some hazard type","location":"Some location","picture":"[Image]","risk_profile":"Low - 6 Hours","site":"Holborn","time":"00:12:40"}` {
-		t.Fatalf(`Should return {"comments":"Bleh","date":"12/04/18","form_reference":"PS HR Dec 17 Ref:001","hazard_type":"Some hazard type","location":"Some location","picture":"[Image]","risk_profile":"Low - 6 Hours","site":"Holborn","time":"00:12:40"}, instead returned %s`, result)
-	}
-}
-
-func TestAshdownPhillipsSiteReportForm(t *testing.T) {
-	schema := `{
-		"schema": {
-			"type": "object",
-			"properties": {
-				"site": {
-					"type": "string",
-					"title": "Select Site",
-					"required": true,
-					"enum": ["Charter House", "Dover Street", "Shepherds Building"]
-				},
-				"form_type": {
-					"title": "Form Type",
-					"type": "string",
-					"enum": ["Incident Report", "Locker Clearance", "Another Type", "Extra Type"],
-					"required": true
-				},
-				"incident_report_completed_by": {
-					"type": "string",
-					"title": "Report Completed By",
-					"required": true
-				},
-				"incident_report_position": {
-					"type": "string",
-					"title": "Position",
-					"required": true
-				},
-				"incident_report_datetime": {
-					"type": "string",
-					"title": "Date and Time of Incident",
-					"required": true
-				},
-				"incident_report_incident_type": {
-					"type": "string",
-					"enum": ["Fire", "Flood", "Intruder", "Near Miss", "Suspicious Behaviour", "Theft", "Violence", "Other"],
-					"title": "Incident Type",
-					"required": true
-				},
-				"incident_report_incident_other": {
-					"type": "string",
-					"title": "Please specify"
-				},
-				"incident_report_emergency_services_called": {
-					"type": "string",
-					"title": "Emergency Services Called?",
-					"enum": ["No", "Yes"]
-				},
-				"incident_report_emergency_services_ambulance_service": {
-					"title": "Ambulance Service",
-					"type": "string",
-					"enum": ["Yes", "No"]
-				},
-				"incident_report_emergency_services_ambulance_called_at": {
-					"type": "string",
-					"title": "Called at",
-					"required": true
-				},
-				"incident_report_emergency_services_ambulance_arrived_at": {
-					"type": "string",
-					"title": "Arrived at",
-					"required": true
-				},
-				"incident_report_emergency_services_ambulance_left_at": {
-					"type": "string",
-					"title": "Left at",
-					"required": true
-				},
-				"incident_report_emergency_services_ambulance_callsign": {
-					"type": "string",
-					"title": "Callsign",
-					"required": true
-				},
-				"incident_report_emergency_services_fire_service": {
-					"title": "Fire Service",
-					"type": "string",
-					"enum": ["Yes", "No"]
-				},
-				"incident_report_emergency_services_fire_service_called_at": {
-					"type": "string",
-					"title": "Called at",
-					"required": true
-				},
-				"incident_report_emergency_services_fire_service_arrived_at": {
-					"type": "string",
-					"title": "Arrived at",
-					"required": true
-				},
-				"incident_report_emergency_services_fire_service_left_at": {
-					"type": "string",
-					"title": "Left at",
-					"required": true
-				},
-				"incident_report_emergency_services_fire_service_callsign": {
-					"type": "string",
-					"title": "Callsign",
-					"required": true
-				},
-				"incident_report_emergency_services_police_service": {
-					"title": "Police",
-					"type": "string",
-					"enum": ["Yes", "No"]
-				},
-				"incident_report_emergency_services_police_called_at": {
-					"type": "string",
-					"title": "Called at",
-					"required": true
-				},
-				"incident_report_emergency_services_police_arrived_at": {
-					"type": "string",
-					"title": "Arrived at",
-					"required": true
-				},
-				"incident_report_emergency_services_police_left_at": {
-					"type": "string",
-					"title": "Left at",
-					"required": true
-				},
-				"incident_report_emergency_services_police_callsign": {
-					"type": "string",
-					"title": "Callsign",
-					"required": true
-				},
-				"incident_report_incident_details": {
-					"type": "string",
-					"title": "Incident Details"
-				},
-				"incident_report_who": {
-					"type": "string",
-					"title": "Who?",
-					"description": "(Who was involved/witnessed the incident. Give description if no names)"
-				},
-				"incident_report_where": {
-					"type": "string",
-					"title": "Where?",
-					"description": "(Exactly where did the Incident happen, be as precise as possible)"
-				},
-				"incident_report_what": {
-					"type": "string",
-					"title": "What?",
-					"description": "(What happened? Start from the beginning and work through events as they occurred)"
-				},
-				"incident_report_images": {
-					"type": "array",
-					"maxItems": 10,
-					"items": {
-						"type": "object",
-						"title": "Image",
-						"properties": {
-							"name": {
-								"type": "string",
-								"title": "Name",
-								"required": true
-							},
-							"image": {
-								"type": "string",
-								"title": "camera",
-								"required": true
-							}
-						}
-					}
-				},
-				"incident_report_follow_up": {
-					"type": "string",
-					"title": "Follow up since the incident?",
-					"description": "(Have the Police requested CCTV? Has management been contacted already?)"
-				},
-				"incident_report_single_image": {
-					"type": "string",
-					"title": "Report Image"
-				},
-				"locker_clearance_locker_number": {
-					"type": "string",
-					"title": "Locker Number",
-					"required": true
-				},
-				"locker_clearance_cleaner_signature_name": {
-					"type": "string",
-					"title": "Cleaner Signature & Name",
-					"required": true
-				},
-				"form_reference": {
-					"type": "string",
-					"title": "Form Reference",
-					"default": "SL Feb 17 Ref:C003",
-					"readonly": true
-				}
-			},
-			"dependencies": {
-				"incident_report_completed_by": ["form_type"],
-				"incident_report_position": ["form_type"],
-				"incident_report_datetime": ["form_type"],
-				"incident_report_incident_type": ["form_type"],
-				"incident_report_incident_other": ["form_type", "incident_report_incident_type"],
-				"incident_report_emergency_services_called": ["form_type"],
-				"incident_report_emergency_services_ambulance_service": ["form_type", "incident_report_emergency_services_called"],
-				"incident_report_emergency_services_ambulance_called_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_ambulance_service"],
-				"incident_report_emergency_services_ambulance_arrived_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_ambulance_service"],
-				"incident_report_emergency_services_ambulance_left_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_ambulance_service"],
-				"incident_report_emergency_services_ambulance_callsign": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_ambulance_service"],
-				"incident_report_emergency_services_fire_service": ["form_type", "incident_report_emergency_services_called"],
-				"incident_report_emergency_services_fire_service_called_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_fire_service"],
-				"incident_report_emergency_services_fire_service_arrived_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_fire_service"],
-				"incident_report_emergency_services_fire_service_left_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_fire_service"],
-				"incident_report_emergency_services_fire_service_callsign": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_fire_service"],
-				"incident_report_emergency_services_police_service": ["form_type", "incident_report_emergency_services_called"],
-				"incident_report_emergency_services_police_called_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_police_service"],
-				"incident_report_emergency_services_police_arrived_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_police_service"],
-				"incident_report_emergency_services_police_left_at": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_police_service"],
-				"incident_report_emergency_services_police_callsign": ["form_type", "incident_report_emergency_services_called", "incident_report_emergency_services_police_service"],
-				"incident_report_incident_details": ["form_type"],
-				"incident_report_who": ["form_type"],
-				"incident_report_where": ["form_type"],
-				"incident_report_what": ["form_type"],
-				"incident_report_single_image": ["form_type"],
-				"incident_report_follow_up": ["form_type"],
-				"locker_clearance_locker_number": ["form_type"],
-				"locker_clearance_cleaner_signature_name": ["form_type"]
-			}
-		},
-		"options": {
-			"fields": {
-				"site": {
-					"removeDefaultNone": false
-				},
-				"form_type": {
-					"removeDefaultNone": false
-				},
-				"incident_report_completed_by": {
-					"dependencies": {
-						"form_type": ["Incident Report"]
-					}
-				},
-				"incident_report_position": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_datetime": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_incident_type": {
-					"removeDefaultNone": false,
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_incident_other": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_incident_type": "Other"
-					}
-				},
-				"incident_report_emergency_services_called": {
-					"removeDefaultNone": true,
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_emergency_services_ambulance_service": {
-					"removeDefaultNone": true,
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes"
-					}
-				},
-				"incident_report_emergency_services_ambulance_called_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_ambulance_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_ambulance_arrived_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_ambulance_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_ambulance_left_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_ambulance_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_ambulance_callsign": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_ambulance_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_fire_service": {
-					"removeDefaultNone": true,
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes"
-					}
-				},
-				"incident_report_emergency_services_fire_service_called_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_fire_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_fire_service_arrived_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_fire_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_fire_service_left_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_fire_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_fire_service_callsign": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_fire_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_police_service": {
-					"removeDefaultNone": true,
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes"
-					}
-				},
-				"incident_report_emergency_services_police_called_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_police_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_police_arrived_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_police_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_police_left_at": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_police_service": "Yes"
-					}
-				},
-				"incident_report_emergency_services_police_callsign": {
-					"dependencies": {
-						"form_type": "Incident Report",
-						"incident_report_emergency_services_called": "Yes",
-						"incident_report_emergency_services_police_service": "Yes"
-					}
-				},
-				"incident_report_incident_details": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_who": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_where": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_what": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_single_image": {
-					"type": "camera",
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_follow_up": {
-					"dependencies": {
-						"form_type": "Incident Report"
-					}
-				},
-				"incident_report_images": {
-					"type": "repeatable",
-					"toolbarSticky": true,
-					"items": {
-						"fields": {
-							"image": {
-								"type": "camera"
-							}
-						}
-	
-					}
-				},
-				"locker_clearance_locker_number": {
-					"dependencies": {
-						"form_type": ["Locker Clearance"]
-					}
-				},
-				"locker_clearance_cleaner_signature_name": {
-					"type": "signature",
-					"dependencies": {
-						"form_type": ["Locker Clearance"]
-					}
-				}
-			}
-		}
-	}`
-
-	data := `{
-		"site": "Holborn",
-		"form_type": "Incident Report",
-		"incident_report_completed_by": "Some person",
-		"incident_report_position": "Some position",
-		"incident_report_datetime": "21/11/20",
-		"incident_report_incident_type": "Other",
-		"incident_report_incident_other": "Other type",
-		"incident_report_images": [
-			{
-				"name": "name1",
-				"image": "image1"
-			},
-			{
-				"name": "name2",
-				"image": "image2"
-			},
-			{
-				"name": "name3",
-				"image": "image3"
-			}
-		]
-	}`
-
-	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-
-	result := alpaca.Parse()
-	if result != `{"form_reference":"SL Feb 17 Ref:C003","form_type":"Incident Report","incident_report_completed_by":"Some person","incident_report_datetime":"21/11/20","incident_report_images":[{"image":"image1"},{"image":"image2"},{"image":"image3"}],"incident_report_incident_other":"Other type","incident_report_incident_type":"Other","incident_report_position":"Some position","site":"Holborn"}` {
-		t.Fatalf(`Should return {"form_reference":"SL Feb 17 Ref:C003","form_type":"Incident Report","incident_report_completed_by":"Some person","incident_report_datetime":"21/11/20","incident_report_images":[{"image":"image1"},{"image":"image2"},{"image":"image3"}],"incident_report_incident_other":"Other type","incident_report_incident_type":"Other","incident_report_position":"Some position","site":"Holborn"}, instead returned %s`, result)
 	}
 }
