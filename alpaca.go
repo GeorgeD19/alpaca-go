@@ -3,11 +3,17 @@ package alpaca
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"image"
 	"io"
 	"mime"
+	"os"
 	"strconv"
 	"time"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 
 	"github.com/bradfitz/slice"
 	"github.com/spf13/cast"
@@ -225,7 +231,11 @@ func (a *Alpaca) RegisterMedia(f *Field, index int) {
 		foundFile.Data = content
 
 		file, _, _ := a.request.FormFile(fileName)
-		config, format, _ := image.DecodeConfig(file)
+		config, format, err := image.DecodeConfig(file)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", fileName, err)
+		}
+
 		foundFile.Name = fileName
 		foundFile.Width = config.Width
 		foundFile.Height = config.Height
@@ -241,6 +251,11 @@ func (a *Alpaca) RegisterMedia(f *Field, index int) {
 		} else {
 			foundFile.Created = t
 		}
+
+		fmt.Println(foundFile.Type)
+		fmt.Println(foundFile.Mime)
+		fmt.Println(foundFile.Width)
+		fmt.Println(foundFile.Height)
 
 		a.MediaRegistry = append(a.MediaRegistry, foundFile)
 		f.Media = append(f.Media, foundFile)

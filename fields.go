@@ -38,6 +38,7 @@ func (a *Alpaca) Array(f *Field) {
 	a.RegisterField(f)
 }
 
+// Tag control field
 func (a *Alpaca) Tag(f *Field) {
 	f.Value = strings.TrimSuffix(strings.TrimPrefix(f.Data.String(), `"`), `"`)
 	a.RegisterField(f)
@@ -93,6 +94,7 @@ func (a *Alpaca) Any(f *Field) {
 	a.RegisterField(f)
 }
 
+// Editor control field
 func (a *Alpaca) Editor(f *Field) {
 	JSON := []byte(f.Data.String())
 	buffer := new(bytes.Buffer)
@@ -103,15 +105,18 @@ func (a *Alpaca) Editor(f *Field) {
 	a.RegisterField(f)
 }
 
+// JSON control field
 func (a *Alpaca) JSON(f *Field) {
 	a.Editor(f)
 }
 
+// Lowercase control field
 func (a *Alpaca) Lowercase(f *Field) {
 	f.Value = strings.TrimSuffix(strings.TrimPrefix(strings.ToLower(f.Data.String()), `"`), `"`)
 	a.RegisterField(f)
 }
 
+// Uppercase control field
 func (a *Alpaca) Uppercase(f *Field) {
 	f.Value = strings.TrimSuffix(strings.TrimPrefix(strings.ToUpper(f.Data.String()), `"`), `"`)
 	a.RegisterField(f)
