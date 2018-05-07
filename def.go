@@ -84,6 +84,7 @@ type Field struct {
 	OptionsType         string
 	Type                string
 	Path                []Chunk
+	PathString          string
 	Validate            string
 	ShowingDefaultData  string
 	PreviouslyValidated bool

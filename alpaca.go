@@ -312,6 +312,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	}
 
 	f.Path = append(f.Path, Chunk{Type: f.ChunkType, Value: f.Key, Field: f})
+	f.PathString = f.GetPathString()
 
 	for i := range f.Path {
 		if i > 0 {
