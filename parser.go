@@ -80,37 +80,43 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 
 // Parse takes field registry and parses it into json string
 func (a *Alpaca) Parse() string {
-	result := gabs.New()
 
-	if len(a.FieldRegistry) < 2 {
-		if a.FieldRegistry[0].IsContainerField {
-			return `""`
-		}
+	if a.output == "" {
 
-		// return cast.ToString(a.FieldRegistry[0].Value)
+		result := gabs.New()
 
-		switch v := a.FieldRegistry[0].Value.(type) {
-		case int:
-			return cast.ToString(v)
-		case float64:
-			return cast.ToString(v)
-		default:
-			if a.FieldRegistry[0].Type != "select" && a.FieldRegistry[0].Type != "json" && a.FieldRegistry[0].Type != "tag" {
-				return `"` + cast.ToString(v) + `"`
+		if len(a.FieldRegistry) < 2 {
+			if a.FieldRegistry[0].IsContainerField {
+				return `""`
 			}
-			return cast.ToString(v)
+
+			// return cast.ToString(a.FieldRegistry[0].Value)
+
+			switch v := a.FieldRegistry[0].Value.(type) {
+			case int:
+				return cast.ToString(v)
+			case float64:
+				return cast.ToString(v)
+			default:
+				if a.FieldRegistry[0].Type != "select" && a.FieldRegistry[0].Type != "json" && a.FieldRegistry[0].Type != "tag" {
+					return `"` + cast.ToString(v) + `"`
+				}
+				return cast.ToString(v)
+
+			}
 
 		}
 
-	}
-
-	for _, f := range a.FieldRegistry {
-		if f.Value != nil && cast.ToString(f.Value) != "" {
-			a.ParseFieldPath(f, &f.Path[0], result)
+		for _, f := range a.FieldRegistry {
+			if f.Value != nil && cast.ToString(f.Value) != "" {
+				a.ParseFieldPath(f, &f.Path[0], result)
+			}
 		}
+
+		a.output = result.String()
 	}
 
-	return result.String()
+	return a.output
 }
 
 // GetPathString returns combined path string - decrepit

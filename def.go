@@ -57,6 +57,7 @@ type Alpaca struct {
 	FieldRegistry   []*Field
 	MediaRegistry   []ImageFile
 	UniqueIDCounter int
+	output          string
 }
 
 // Chunk is used to construct a field path
