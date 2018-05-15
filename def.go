@@ -94,7 +94,7 @@ type Field struct {
 	ValueType           string
 	Default             interface{}
 	DefaultType         string
-	Order               int
+	Order               float64
 	ReadOnly            bool
 	notTopLevel         bool
 	IsArrayChild        bool

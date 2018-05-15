@@ -54,7 +54,18 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 	// Kick off the field registration
 	alpaca.CreateFieldInstance("", alpaca.data, alpaca.options, alpaca.schema, nil, 0, false)
 
-	// Sort fields by ordering
+	for _, field := range alpaca.FieldRegistry {
+		if field.Parent != nil && field.Parent.IsArrayChild {
+			field.IsArrayChild = true
+		}
+
+		if field.IsArrayChild {
+			field.Order = field.Order + float64(field.ArrayIndex+1)/100
+			fmt.Println(field.Order)
+		}
+	}
+
+	// Sort fields by ordering - This won't work as it ignores array ordering
 	slice.Sort(alpaca.FieldRegistry[:], func(i, j int) bool {
 		return alpaca.FieldRegistry[i].Order < alpaca.FieldRegistry[j].Order
 	})
@@ -187,7 +198,7 @@ func (f *Field) GetAttributes() {
 	}
 
 	if f.Options.Exists("order") {
-		f.Order = cast.ToInt(f.Options.S("order").Data())
+		f.Order = cast.ToFloat64(f.Options.S("order").Data())
 	}
 
 	if f.Data.Data() != nil {
@@ -324,6 +335,11 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	if f.IsArrayChild && f.Value != nil {
 		f.Parent.ArrayValues++
+
+		// if alpaca.FieldRegistry[i].Key != "" {
+		// 	fmt.Println(alpaca.FieldRegistry[i].Order)
+		// }
+
 	}
 
 	f.Path = append(f.Path, Chunk{Type: f.ChunkType, Value: f.Key, Field: f})
