@@ -100,6 +100,8 @@ type Field struct {
 	IsArrayChild        bool
 	ArrayIndex          int
 	ArrayValues         int
+	Depth               int
+	DepthOrder          float64
 	Media               []ImageFile
 }
 

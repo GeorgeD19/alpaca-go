@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"math"
 	"mime"
 	"os"
 	"strconv"
@@ -58,16 +59,11 @@ func New(options AlpacaOptions) (*Alpaca, error) {
 		if field.Parent != nil && field.Parent.IsArrayChild {
 			field.IsArrayChild = true
 		}
-
-		if field.IsArrayChild {
-			field.Order = field.Order + float64(field.ArrayIndex+1)/100
-			fmt.Println(field.Order)
-		}
 	}
 
 	// Sort fields by ordering - This won't work as it ignores array ordering
 	slice.Sort(alpaca.FieldRegistry[:], func(i, j int) bool {
-		return alpaca.FieldRegistry[i].Order < alpaca.FieldRegistry[j].Order
+		return alpaca.FieldRegistry[i].DepthOrder < alpaca.FieldRegistry[j].DepthOrder
 	})
 
 	return alpaca, nil
@@ -186,6 +182,21 @@ func (a *Alpaca) GetSchemaType(data *gabs.Container) string {
 	return "string"
 }
 
+// GetDepthOrder
+func GetDepthOrder(f *Field, o float64) float64 {
+	if f.Parent != nil {
+		o += GetDepthOrder(f.Parent, o)
+	}
+
+	if v, err := strconv.Atoi(f.Key); err == nil {
+		o += float64(v) / math.Pow(10, float64(f.Depth))
+	} else {
+		o += f.Order / math.Pow(10, float64(f.Depth))
+	}
+
+	return o
+}
+
 // GetAttributes extracts generic attributes from fields
 func (f *Field) GetAttributes() {
 	if f.Schema.Exists("title") {
@@ -197,9 +208,17 @@ func (f *Field) GetAttributes() {
 		f.Parent.Children = append(f.Parent.Children, f)
 	}
 
-	if f.Options.Exists("order") {
-		f.Order = cast.ToFloat64(f.Options.S("order").Data())
+	if f.Parent != nil {
+		f.Depth = f.Parent.Depth
+		f.Depth++
 	}
+
+	if f.Options.Exists("order") {
+		// f.Order += cast.ToFloat64(f.Options.S("order").Data()) / math.Pow(10, float64(f.Depth))
+		f.Order = cast.ToFloat64(f.Options.S("order").Data()) // / math.Pow(10, float64(f.Depth))
+	}
+
+	f.DepthOrder = GetDepthOrder(f, 0)
 
 	if f.Data.Data() != nil {
 		f.Value = f.Data.Data()

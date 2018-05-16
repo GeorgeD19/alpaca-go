@@ -47,6 +47,7 @@ func (a *Alpaca) Tag(f *Field) {
 // Object container field
 func (a *Alpaca) Object(f *Field) {
 	f.IsContainerField = true
+
 	properties, err := f.Schema.S("properties").ChildrenMap()
 	if err == nil {
 		for key := range properties {
