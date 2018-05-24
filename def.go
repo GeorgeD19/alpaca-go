@@ -118,10 +118,16 @@ type StandardFile struct {
 
 // ImageFile type extends File type to track width & height of image.
 type ImageFile struct {
-	StandardFile
+	Data     string
+	Type     string
+	Mime     string
+	Field    string
+	Name     string
 	FieldKey string
 	Width    int
 	Height   int
+	Created  time.Time
+	FieldRef *Field
 }
 
 var (

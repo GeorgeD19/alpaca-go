@@ -122,16 +122,19 @@ func (a *Alpaca) Parse() string {
 // GetPathString returns combined path string - decrepit
 func (f *Field) GetPathString() (path string) {
 	result := ""
-
-	for _, chunk := range f.Path {
-		if chunk.Type != "object" {
-			if result != "" {
-				result += "." + chunk.Value
+	fPath := f.Path
+	for _, chunk := range fPath {
+		if chunk.Parent != nil {
+			parent := chunk.Parent
+			if parent.Type == "array" || parent.Type == "repeatable" {
+				result += "[" + chunk.Value + "]"
 			} else {
-				result = chunk.Value
+				if result != "" {
+					result += "." + chunk.Value
+				} else {
+					result = chunk.Value
+				}
 			}
-		} else if chunk.Type == "array" || chunk.Type == "repeatable" {
-			result += "[" + chunk.Value + "]"
 		}
 	}
 

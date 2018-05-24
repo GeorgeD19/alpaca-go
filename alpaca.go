@@ -354,15 +354,9 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	if f.IsArrayChild && f.Value != nil {
 		f.Parent.ArrayValues++
-
-		// if alpaca.FieldRegistry[i].Key != "" {
-		// 	fmt.Println(alpaca.FieldRegistry[i].Order)
-		// }
-
 	}
 
 	f.Path = append(f.Path, Chunk{Type: f.ChunkType, Value: f.Key, Field: f})
-	f.PathString = f.GetPathString()
 
 	for i := range f.Path {
 		if i > 0 {
@@ -370,6 +364,8 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 			f.Path[i].Parent = &f.Path[i-1]
 		}
 	}
+
+	f.PathString = f.GetPathString()
 
 	// Not all field types are required for definition, many share the same basic behaviour as Any
 	switch f.Type {
