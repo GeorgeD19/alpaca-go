@@ -199,6 +199,11 @@ func GetDepthOrder(f *Field, o float64) float64 {
 
 // GetAttributes extracts generic attributes from fields
 func (f *Field) GetAttributes() {
+
+	if f.Default != "" {
+		f.Value = f.Default
+	}
+
 	if f.Schema.Exists("title") {
 		f.Title = cast.ToString(f.Schema.S("title").Data())
 	}
@@ -232,9 +237,9 @@ func (f *Field) GetAttributes() {
 		f.Default = f.Schema.S("default").Data()
 	}
 
-	if f.ReadOnly {
-		f.Value = f.Default
-	}
+	// if f.ReadOnly {
+	// 	f.Value = f.Default
+	// }
 }
 
 // RegisterField field adds the field to the field registry
