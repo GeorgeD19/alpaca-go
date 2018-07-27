@@ -11,7 +11,7 @@ import (
 func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Container) *gabs.Container {
 
 	switch chunk.Type {
-	case "repeatable", "array", "select":
+	case "repeatable", "array": //, "select":
 		if chunk.Connector != nil {
 			if chunk.Field.ArrayValues > 0 {
 
@@ -108,6 +108,7 @@ func (a *Alpaca) Parse() string {
 		}
 
 		for _, f := range a.FieldRegistry {
+
 			if f.Value != nil && cast.ToString(f.Value) != "" {
 				a.ParseFieldPath(f, &f.Path[0], result)
 			}
