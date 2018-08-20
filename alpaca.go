@@ -335,6 +335,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		Schema:       schema,
 		Options:      options,
 		Data:         data,
+		DataString:   data.String(),
 		Key:          key,
 		Type:         fieldType,
 		SchemaType:   schemaType,

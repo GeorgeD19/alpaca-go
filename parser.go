@@ -49,6 +49,7 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 		}
 
 		if isInt {
+			// fmt.Println(intVal)
 			arrayValue := gabs.New()
 
 			item := a.ParseFieldPath(f, chunk.Connector, arrayValue)
@@ -74,7 +75,8 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 		}
 		generated.Set(f.Value, chunk.Value)
 	}
-
+	// TODO Merge with existing arrays e.g. [{"location": "test"}] and [{"control": "test"}] becomes [{"control":"test","location": "test"}]
+	// fmt.Println(generated.String())
 	return generated
 }
 
@@ -108,7 +110,7 @@ func (a *Alpaca) Parse() string {
 		}
 
 		for _, f := range a.FieldRegistry {
-
+			// fmt.Println(f.PathString)
 			if f.Value != nil && cast.ToString(f.Value) != "" {
 				a.ParseFieldPath(f, &f.Path[0], result)
 			}

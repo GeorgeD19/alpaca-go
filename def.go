@@ -73,6 +73,7 @@ type Chunk struct {
 // Field is a field of any kind
 type Field struct {
 	Data                *gabs.Container
+	DataString          string
 	Options             *gabs.Container
 	Schema              *gabs.Container
 	Parent              *Field
