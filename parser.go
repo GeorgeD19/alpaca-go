@@ -11,7 +11,7 @@ import (
 func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Container) *gabs.Container {
 
 	switch chunk.Type {
-	case "repeatable", "array", "select":
+	case "repeatable", "array":
 		if chunk.Connector != nil {
 			if chunk.Field.ArrayValues > 0 {
 
@@ -38,6 +38,40 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 				}
 
 			}
+		}
+		break
+	case "select":
+		if chunk.Connector != nil {
+			if chunk.Field.ArrayValues > 0 {
+
+				if chunk.Value != "" {
+					if !generated.Exists(chunk.Value) {
+						generated.ArrayOfSize(chunk.Field.ArrayValues, chunk.Value)
+					}
+
+					arrayVal := generated.S(chunk.Value)
+					if chunk.Connector != nil {
+						if chunk.Connector.Type != "array" && chunk.Connector.Type != "select" && chunk.Connector.Type != "repeatable" && chunk.Connector.Type != "object" {
+							intVal := 0
+							if v, err := strconv.Atoi(chunk.Connector.Value); err == nil {
+								intVal = v
+							}
+
+							arrayVal.SetIndex(f.Value, intVal)
+						} else {
+							a.ParseFieldPath(f, chunk.Connector, arrayVal)
+						}
+					}
+				} else {
+					generated.Set(f.Parent.Data.Data())
+				}
+
+			}
+		} else {
+			if generated == nil {
+				generated = gabs.New()
+			}
+			generated.Set(f.Value, chunk.Value)
 		}
 		break
 	case "object":
