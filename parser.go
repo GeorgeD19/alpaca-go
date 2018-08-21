@@ -1,6 +1,7 @@
 package alpaca
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/Jeffail/gabs"
@@ -52,12 +53,22 @@ func (a *Alpaca) ParseFieldPath(f *Field, chunk *Chunk, generated *gabs.Containe
 			// fmt.Println(intVal)
 			arrayValue := gabs.New()
 
+			// This isn't merging for some reason
 			item := a.ParseFieldPath(f, chunk.Connector, arrayValue)
-			if generated.Index(intVal).Data() != nil && chunk.Parent.Type == "object" {
-				item.Merge(generated.Index(intVal))
+			itemParsed, _ := gabs.ParseJSON([]byte(item.String()))
+			fmt.Println(itemParsed.String())
+			indexData := generated.Index(intVal).Data()
+			fmt.Println(indexData)
+			fmt.Println(chunk.Parent.Type)
+			if indexData != nil && (chunk.Parent.Type == "object" || chunk.Parent.Type == "repeatable") {
+				// We're not actually making it in here!
+				item2Parsed, _ := gabs.ParseJSON([]byte(generated.Index(intVal).String()))
+				fmt.Println(item2Parsed.String())
+				itemParsed.Merge(item2Parsed)
 			}
+			fmt.Println("Merged", itemParsed.String())
 
-			generated.SetIndex(item.Data(), intVal)
+			generated.SetIndex(itemParsed.Data(), intVal)
 
 		} else {
 			if chunk.Connector != nil {
