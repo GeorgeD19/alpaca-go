@@ -249,9 +249,7 @@ func (a *Alpaca) RegisterField(f *Field) {
 
 func (a *Alpaca) RegisterMedia(f *Field, index int) {
 
-	// This won't work since f.Key ignores all the chunks before hand. We need to regen the entire path
-	fileName := f.Key + "_image_" + strconv.Itoa(index)
-
+	fileName := f.PathString + "_image_" + strconv.Itoa(index)
 	file, _, err := a.request.FormFile(fileName)
 	CreatedDevice := a.request.FormValue(fileName + "_created")
 
