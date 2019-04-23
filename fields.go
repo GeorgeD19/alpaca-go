@@ -35,6 +35,34 @@ func (a *Alpaca) Array(f *Field) {
 		}
 	}
 
+	if f.Type == "select" {
+		if f.Schema.Exists("enum") {
+			enum, err := f.Schema.S("enum").Children()
+			if err == nil {
+				// Enum fallback value
+				for i := 0; i < len(enum); i++ {
+					if cast.ToString(f.Value) == cast.ToString(enum[i].Data()) {
+						f.EnumLabel = cast.ToString(enum[i].Data())
+					}
+				}
+				if f.Options.Exists("optionLabels") {
+					optionLabels, err := f.Options.S("optionLabels").Children()
+					if err == nil {
+						for i := 0; i < len(enum); i++ {
+							if cast.ToString(f.Value) == cast.ToString(enum[i].Data()) {
+								f.EnumLabel = cast.ToString(optionLabels[i].Data())
+							}
+							f.Enum = append(f.Enum, Enum{
+								Value: enum[i].Data(),
+								Label: optionLabels[i].Data(),
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+
 	a.RegisterField(f)
 }
 

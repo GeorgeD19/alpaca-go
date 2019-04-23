@@ -104,6 +104,13 @@ type Field struct {
 	Depth               int
 	DepthOrder          float64
 	Media               []ImageFile
+	Enum                []Enum
+	EnumLabel           string
+}
+
+type Enum struct {
+	Value interface{}
+	Label interface{}
 }
 
 // StandardFile type is a common base for files.

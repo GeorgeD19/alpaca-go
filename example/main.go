@@ -18,7 +18,7 @@ func main() {
 			"date_time_informed": "20/10/12 2pm"
 		  }
 		],
-		"incident_type": "Fire",
+		"incident_type": "Fire,Flood,Intruder",
 		"date_time": "2019-04-02T12:47",
 		"emergency_services_contacted": "No",
 		"form_ref": "SL Feb 17 Ref:C040",
