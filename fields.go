@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cast"
 )
@@ -114,6 +115,19 @@ func (a *Alpaca) Signature(f *Field) {
 		for x := 0; x < 1; x++ {
 			a.RegisterMedia(f, x)
 		}
+	}
+	a.RegisterField(f)
+}
+
+// Datetime control field
+func (a *Alpaca) Datetime(f *Field) {
+	str := cast.ToString(f.Data.Data())
+	layout := "2006-01-02T15:04:05.000"
+	t, err := time.Parse(layout, str)
+	if err != nil {
+		f.Value = f.Data.Data()
+	} else {
+		f.Value = t.Format("2006-01-02 03:04:05")
 	}
 	a.RegisterField(f)
 }

@@ -376,6 +376,9 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 	case "array", "repeatable", "select":
 		a.Array(f)
 		break
+	case "datetime":
+		a.Datetime(f)
+		break
 	case "object":
 		a.Object(f)
 		break
