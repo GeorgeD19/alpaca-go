@@ -300,8 +300,12 @@ func (a *Alpaca) RegisterMedia(f *Field, index int) {
 // CreateFieldInstance returns a new instance of the desired field based on the schema
 func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *gabs.Container, schema *gabs.Container, connector *Field, arrayIndex int, arrayChild bool) {
 
-	fieldType := ""
+	optionsType := ""
 	schemaType := ""
+
+	if schema.Exists("type") != false {
+		schemaType = schema.S("type").Data().(string)
+	}
 
 	if options.Exists("type") == false {
 
@@ -310,23 +314,23 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 			schemaType = a.GetSchemaType(data)
 
 			if schemaType != "" {
-				fieldType = schemaType
+				optionsType = schemaType
 			}
 		}
 
 		// if nothing passed in, fallback to defaults
 		if schema.Exists("type") == false {
-			fieldType = "object" // fallback
+			optionsType = "object" // fallback
 		} else {
 			schemaType = schema.S("type").Data().(string)
 		}
 
 		optionType := a.GuessOptionsType(schema)
 		if optionType != "" {
-			fieldType = optionType
+			optionsType = optionType
 		}
 	} else {
-		fieldType = options.S("type").Data().(string)
+		optionsType = options.S("type").Data().(string)
 	}
 
 	f := &Field{
@@ -335,16 +339,16 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 		Data:         data,
 		DataString:   data.String(),
 		Key:          key,
-		Type:         fieldType,
+		Type:         optionsType,
 		SchemaType:   schemaType,
-		ChunkType:    fieldType,
+		ChunkType:    optionsType,
 		Parent:       connector,
 		IsArrayChild: arrayChild,
 		ArrayIndex:   arrayIndex,
 		ArrayValues:  0,
 	}
 
-	if fieldType == "select" && schemaType != "" {
+	if optionsType == "select" && schemaType != "" {
 		f.ChunkType = schemaType
 	}
 
@@ -373,7 +377,7 @@ func (a *Alpaca) CreateFieldInstance(key string, data *gabs.Container, options *
 
 	// Not all field types are required for definition, many share the same basic behaviour as Any
 	switch f.Type {
-	case "array", "repeatable", "select":
+	case "array", "repeatable", "select", "checkbox":
 		a.Array(f)
 		break
 	case "datetime":

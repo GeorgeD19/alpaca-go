@@ -147,7 +147,8 @@ func (a *Alpaca) Parse() string {
 
 		for _, f := range a.FieldRegistry {
 			// fmt.Println(f.PathString)
-			if f.Value != nil && cast.ToString(f.Value) != "" {
+			strValue := cast.ToString(f.Value)
+			if f.Value != nil && strValue != "" || f.Type == "checkbox" {
 				a.ParseFieldPath(f, &f.Path[0], result)
 			}
 		}

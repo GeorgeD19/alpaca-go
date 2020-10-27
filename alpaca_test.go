@@ -153,6 +153,65 @@ func TestCheckboxField(t *testing.T) {
 	}
 }
 
+func TestCheckboxArrayField(t *testing.T) {
+	schema := `{
+		"schema": {
+			"type": "object",
+			"properties": {
+				"field": {
+					"type": "array",
+					"enum": [
+						" Fire",
+						"Flood",
+						"Intruder",
+						"Injury",
+						"Drugs",
+						"Weapon",
+						"Suspicious Behaviour",
+						"Physical Violence",
+						"Threat of Violence",
+						"Verbal Abuse",
+						"Near-Miss",
+						"Theft",
+						"Other"
+					],
+					"required": true
+				}
+			}
+		},
+		"options": {
+			"fields": {
+				"field": {
+					"type": "checkbox",
+					"sort": false
+				}
+			}
+		}
+	}`
+	data := `{
+		"field": [
+		  {
+			"value": " Fire",
+			"text": " Fire"
+		  },
+		  {
+			"value": "Threat of Violence",
+			"text": "Threat of Violence"
+		  }
+		]
+	}`
+
+	alpaca, err := New(AlpacaOptions{Schema: schema, Data: data})
+	if err != nil {
+		t.Fatalf("TestCheckboxArrayField error: %s", err)
+	}
+
+	result := alpaca.Parse()
+	if result != `{"field":[{"text":" Fire","value":" Fire"},{"text":"Threat of Violence","value":"Threat of Violence"}]}` {
+		t.Fatalf(`Should return {"field":[{"text":" Fire","value":" Fire"},{"text":"Threat of Violence","value":"Threat of Violence"}]}, instead returned %s`, result)
+	}
+}
+
 // File Field http://www.alpacajs.org/docs/fields/file.html
 // func TestFileField(t *testing.T) {
 
